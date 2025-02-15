@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duty Request Form</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f7fa;
+            color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .request-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .success-message {
+            display: none;
+            text-align: center;
+            color: #2ecc71;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="request-form">
+        <h1>Duty Request Form</h1>
+        <form id="dutyRequestForm">
+            <div class="form-group">
+                <label for="name">Your Name</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <select id="location" required>
+                    <option value="MCH1">MCH1</option>
+                    <option value="MCH2">MCH2</option>
+                    <option value="MDH">MDH</option>
+                    <option value="BAH">BAH</option>
+                    <option value="MPH">MPH</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" required>
+            </div>
+            <div class="form-group">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" required>
+            </div>
+            <button type="submit">Submit Request</button>
+        </form>
+        <div id="successMessage" class="success-message">
+            Request submitted successfully!
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('dutyRequestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const request = {
+                name: document.getElementById('name').value,
+                location: document.getElementById('location').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+
+            // Store the request in localStorage
+            let requests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
+            requests.push(request);
+            localStorage.setItem('dutyRequests', JSON.stringify(requests));
+
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Reset form
+            this.reset();
+
+            // Redirect back to main page after 2 seconds
+            setTimeout(() => {
+                window.location.href = 'schedule_maker.html';
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
