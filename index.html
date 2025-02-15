@@ -1,98 +1,144 @@
-// Function to generate request link
-function generateRequestLink() {
-    const link = window.location.origin + window.location.pathname.replace('index.html', 'duty_request.html');
-    document.getElementById('requestLink').value = link;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Schedule Maker</title>
+    <!-- Copy all the styles from your original schedule_maker.html -->
+    <style>
+        /* Copy all your existing styles here */
+    </style>
+</head>
+<body>
+    <h1>Monthly Schedule Maker</h1>
+    <div class="header">
+        <select id="month">
+            <option value="0">January</option>
+            <!-- ... other months ... -->
+        </select>
+        <input type="number" id="year" value="2025" min="1900" max="2100">
+        <button onclick="generateCalendar()">Update Calendar</button>
+    </div>
 
-function emailRequestLink() {
-    const link = window.location.origin + window.location.pathname.replace('index.html', 'duty_request.html');
-    const emailSubject = "Duty Request Form";
-    const emailBody = `Please use this link to submit your duty request:\n\n${link}`;
-    
-    // Create mailto link
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-    
-    // Open default email client
-    window.location.href = mailtoLink;
-}
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'dutyTab')">Ask for Duty</button>
+        <button class="tab-button" onclick="openTab(event, 'timeOffTab')">Request Time Off</button>
+        <button class="tab-button" onclick="openTab(event, 'summaryTab')">Time Off Summary</button>
+    </div>
 
-<div id="dutyTab" class="tab-content active">
-    <div class="request-section">
-        <h2>Ask for Duty</h2>
-        <div class="duty-form">
-            <input type="text" id="dutyRequestName" placeholder="Your Name" required>
-            <input type="date" id="dutyStartDate" required>
-            <input type="date" id="dutyEndDate" required>
-            <select id="dutyLocation" required>
-                <option value="">Select Location</option>
-                <option value="MCH1">MCH1</option>
-                <option value="MCH2">MCH2</option>
-                <option value="MDH">MDH</option>
-                <option value="BAH">BAH</option>
-                <option value="MPH">MPH</option>
-            </select>
-            <button onclick="addDutyRequest()">Submit Duty Request</button>
+    <!-- Duty Tab -->
+    <div id="dutyTab" class="tab-content active">
+        <div class="request-section">
+            <h2>Ask for Duty</h2>
+            <div class="duty-form">
+                <input type="text" id="dutyRequestName" placeholder="Your Name" required>
+                <input type="date" id="dutyStartDate" required>
+                <input type="date" id="dutyEndDate" required>
+                <select id="dutyLocation" required>
+                    <option value="">Select Location</option>
+                    <option value="MCH1">MCH1</option>
+                    <option value="MCH2">MCH2</option>
+                    <option value="MDH">MDH</option>
+                    <option value="BAH">BAH</option>
+                    <option value="MPH">MPH</option>
+                </select>
+                <button onclick="addDutyRequest()">Submit Duty Request</button>
+            </div>
+            <div class="link-section">
+                <button onclick="emailRequestLink()" class="request-link-btn">Email Request Link</button>
+                <button onclick="generateRequestLink()" class="request-link-btn">Generate Request Link</button>
+                <input type="text" id="requestLink" readonly class="request-link">
+                <button onclick="copyLink()" class="copy-btn">Copy Link</button>
+            </div>
         </div>
-        <div class="link-section">
-            <button onclick="emailRequestLink()" class="request-link-btn">Email Request Link</button>
-            <button onclick="generateRequestLink()" class="request-link-btn">Generate Request Link</button>
-            <input type="text" id="requestLink" readonly class="request-link">
-            <button onclick="copyLink()" class="copy-btn">Copy Link</button>
+        <div class="requests">
+            <h2>Current Duty Requests</h2>
+            <ul id="dutyRequestList"></ul>
         </div>
     </div>
-    <div class="requests">
-        <h2>Current Duty Requests</h2>
-        <ul id="dutyRequestList"></ul>
+
+    <!-- Time Off Tab -->
+    <div id="timeOffTab" class="tab-content">
+        <!-- Copy your time off tab content here -->
     </div>
-</div>
 
-<script>
-function addDutyRequest() {
-    const name = document.getElementById("dutyRequestName").value;
-    const startDate = document.getElementById("dutyStartDate").value;
-    const endDate = document.getElementById("dutyEndDate").value;
-    const location = document.getElementById("dutyLocation").value;
+    <!-- Summary Tab -->
+    <div id="summaryTab" class="tab-content">
+        <!-- Copy your summary tab content here -->
+    </div>
 
-    if (!name || !startDate || !endDate || !location) {
-        alert("Please fill in all fields");
-        return;
-    }
+    <table id="calendar">
+        <!-- Calendar will be generated here -->
+    </table>
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    <script>
+        // Initialize variables
+        let schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+        let requests = JSON.parse(localStorage.getItem('requests') || '[]');
+        let dutyRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
 
-    if (end < start) {
-        alert("End date cannot be before start date");
-        return;
-    }
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
 
-    // Get existing requests or initialize empty array
-    const existingRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
+        function addDutyRequest() {
+            const name = document.getElementById("dutyRequestName").value;
+            const startDate = document.getElementById("dutyStartDate").value;
+            const endDate = document.getElementById("dutyEndDate").value;
+            const location = document.getElementById("dutyLocation").value;
 
-    // Add new request for each day in the range
-    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-        existingRequests.push({
-            name: name,
-            location: location,
-            date: formatDate(date)
+            if (!name || !startDate || !endDate || !location) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            if (end < start) {
+                alert("End date cannot be before start date");
+                return;
+            }
+
+            // Get existing requests or initialize empty array
+            const existingRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
+
+            // Add new request for each day in the range
+            for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                existingRequests.push({
+                    name: name,
+                    location: location,
+                    date: formatDate(date)
+                });
+            }
+
+            // Save to localStorage
+            localStorage.setItem('dutyRequests', JSON.stringify(existingRequests));
+            
+            // Update display
+            dutyRequests = existingRequests;
+            updateDutyRequestList();
+            generateCalendar();
+
+            // Clear form
+            document.getElementById("dutyRequestName").value = "";
+            document.getElementById("dutyStartDate").value = "";
+            document.getElementById("dutyEndDate").value = "";
+            document.getElementById("dutyLocation").value = "";
+
+            // Show success message
+            alert("Duty request submitted successfully!");
+        }
+
+        // Copy all your other existing functions here
+        // (generateCalendar, updateDutyRequestList, etc.)
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            generateCalendar();
+            updateTimeOffSummary();
+            updateDutyRequestList();
         });
-    }
-
-    // Save to localStorage
-    localStorage.setItem('dutyRequests', JSON.stringify(existingRequests));
-    
-    // Update display
-    dutyRequests = existingRequests;
-    updateDutyRequestList();
-    generateCalendar();
-
-    // Clear form
-    document.getElementById("dutyRequestName").value = "";
-    document.getElementById("dutyStartDate").value = "";
-    document.getElementById("dutyEndDate").value = "";
-    document.getElementById("dutyLocation").value = "";
-
-    // Show success message
-    alert("Duty request submitted successfully!");
-}
-</script> 
+    </script>
+</body>
+</html> 
