@@ -299,6 +299,24 @@
             alert("Duty request submitted successfully!");
         }
 
+        function generateRequestLink() {
+            // Get the current URL path up to the last directory
+            const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            // Add duty_request.html to it
+            const link = basePath + 'duty_request.html';
+            document.getElementById('requestLink').value = link;
+        }
+
+        function emailRequestLink() {
+            const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            const link = basePath + 'duty_request.html';
+            const emailSubject = "Duty Request Form";
+            const emailBody = `Please use this link to submit your duty request:\n\n${link}`;
+            
+            const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            window.location.href = mailtoLink;
+        }
+
         // Copy all your other existing functions here
         // (generateCalendar, updateDutyRequestList, etc.)
 
