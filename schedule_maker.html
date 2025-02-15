@@ -423,9 +423,32 @@
         padding-top: 20px;
         border-top: 1px solid #e1e8ef;
     }
+    .navigation {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        justify-content: center;
+    }
+    
+    .nav-btn {
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    
+    .nav-btn:hover {
+        background-color: #2980b9;
+    }
   </style>
 </head>
 <body>
+  <div class="navigation">
+    <button onclick="window.location.href='index.html'" class="nav-btn">Back to Main</button>
+    <button onclick="window.location.href='duty_request.html'" class="nav-btn">Submit Duty Request</button>
+  </div>
   <h1>Monthly Schedule Maker</h1>
   <div class="header">
     <select id="month">

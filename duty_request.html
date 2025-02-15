@@ -39,9 +39,32 @@
         button:hover {
             background-color: #2980b9;
         }
+        .navigation {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .nav-btn:hover {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body>
+    <div class="navigation">
+        <button onclick="window.location.href='index.html'" class="nav-btn">Back to Main</button>
+        <button onclick="window.location.href='schedule_maker.html'" class="nav-btn">View Schedule</button>
+    </div>
     <div class="request-form">
         <h2>Submit Duty Request</h2>
         <input type="text" id="name" placeholder="Your Name" required>
@@ -59,10 +82,14 @@
     </div>
 
     <script>
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
         function submitRequest() {
             const name = document.getElementById('name').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
             const location = document.getElementById('location').value;
 
             if (!name || !startDate || !endDate || !location) {
@@ -70,25 +97,29 @@
                 return;
             }
 
-            // Get existing requests or initialize empty array
+            // Get existing requests
             const existingRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
 
-            // Add new request
-            existingRequests.push({
-                name: name,
-                startDate: startDate,
-                endDate: endDate,
-                location: location
-            });
+            // Add request for each day in the range
+            for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                existingRequests.push({
+                    name: name,
+                    location: location,
+                    date: formatDate(date)
+                });
+            }
 
-            // Save back to localStorage
+            // Save to localStorage
             localStorage.setItem('dutyRequests', JSON.stringify(existingRequests));
 
-            // Show success message
             alert('Request submitted successfully!');
-
-            // Redirect back to index.html
-            window.location.href = window.location.href.replace('duty_request.html', 'index.html');
+            
+            // Ask user where to go
+            if (confirm('Would you like to view the schedule?')) {
+                window.location.href = 'schedule_maker.html';
+            } else {
+                window.location.href = 'index.html';
+            }
         }
     </script>
 </body>

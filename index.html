@@ -176,6 +176,135 @@
                 width: 100%;
             }
         }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 500;
+            padding: 15px;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        td {
+            border: 1px solid #e1e8ef;
+            padding: 15px;
+            vertical-align: top;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .location-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .location-label {
+            font-weight: 500;
+            color: #34495e;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+
+        .assignment {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            border: 1px solid #e1e8ef;
+            cursor: pointer;
+        }
+
+        .duty-requested {
+            background-color: #e8f4fc;
+            border-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #e1e8ef;
+        }
+
+        .summary-table th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .year-total {
+            font-weight: bold;
+            color: #2ecc71;
+        }
+
+        .summary-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .summary-controls input {
+            padding: 10px;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+        }
+
+        .summary-controls button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .time-off {
+            background-color: #ffebee;
+            border-color: #ef5350;
+            opacity: 0.7;
+        }
+
+        .time-off .location-label,
+        .time-off span {
+            color: #d32f2f;
+        }
+
+        .assigned {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .assigned span {
+            color: #2e7d32;
+        }
     </style>
 </head>
 <body>
@@ -183,10 +312,24 @@
     <div class="header">
         <select id="month">
             <option value="0">January</option>
-            <!-- ... other months ... -->
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
         </select>
         <input type="number" id="year" value="2025" min="1900" max="2100">
         <button onclick="generateCalendar()">Update Calendar</button>
+    </div>
+
+    <div class="navigation">
+        <button onclick="window.location.href='schedule_maker.html'" class="nav-btn">Go to Schedule Maker</button>
     </div>
 
     <div class="tabs">
@@ -228,12 +371,35 @@
 
     <!-- Time Off Tab -->
     <div id="timeOffTab" class="tab-content">
-        <!-- Copy your time off tab content here -->
+        <div class="request-section">
+            <h2>Request Time Off</h2>
+            <div class="duty-form">
+                <input type="text" id="timeOffName" placeholder="Your Name" required>
+                <input type="date" id="timeOffStartDate" required>
+                <input type="date" id="timeOffEndDate" required>
+                <button onclick="addTimeOffRequest()">Submit Time Off Request</button>
+            </div>
+        </div>
+        <div class="requests">
+            <h2>Current Time Off Requests</h2>
+            <ul id="timeOffRequestList"></ul>
+        </div>
     </div>
 
     <!-- Summary Tab -->
     <div id="summaryTab" class="tab-content">
-        <!-- Copy your summary tab content here -->
+        <div class="time-off-summary">
+            <h2>Time Off Summary</h2>
+            <div class="summary-controls">
+                <input type="number" id="summaryYear" value="2025" min="1900" max="2100">
+                <button onclick="updateTimeOffSummary()">Update Summary</button>
+            </div>
+            <div class="summary-table-container">
+                <table id="timeOffSummary" class="summary-table">
+                    <!-- Summary will be generated here -->
+                </table>
+            </div>
+        </div>
     </div>
 
     <table id="calendar">
@@ -300,25 +466,361 @@
         }
 
         function generateRequestLink() {
-            // Get the current URL path up to the last directory
             const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-            // Add duty_request.html to it
-            const link = basePath + 'duty_request.html';
-            document.getElementById('requestLink').value = link;
+            const dutyLink = basePath + 'duty_request.html';
+            const scheduleLink = basePath + 'schedule_maker.html';
+            
+            document.getElementById('requestLink').value = 
+                `Duty Request: ${dutyLink}\nSchedule Maker: ${scheduleLink}`;
         }
 
         function emailRequestLink() {
             const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-            const link = basePath + 'duty_request.html';
-            const emailSubject = "Duty Request Form";
-            const emailBody = `Please use this link to submit your duty request:\n\n${link}`;
+            const dutyLink = basePath + 'duty_request.html';
+            const scheduleLink = basePath + 'schedule_maker.html';
+            
+            const emailSubject = "Schedule Links";
+            const emailBody = `Please use these links:\n\n` +
+                `Submit Duty Request: ${dutyLink}\n` +
+                `View Schedule: ${scheduleLink}`;
             
             const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
             window.location.href = mailtoLink;
         }
 
-        // Copy all your other existing functions here
-        // (generateCalendar, updateDutyRequestList, etc.)
+        // Add the missing functions
+        function generateCalendar() {
+            const calendarTable = document.getElementById("calendar");
+            calendarTable.innerHTML = "";
+
+            const month = parseInt(document.getElementById("month").value);
+            const year = parseInt(document.getElementById("year").value);
+
+            // Get first day and last day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            // Create header row with day names
+            const headerRow = document.createElement("tr");
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            dayNames.forEach(day => {
+                const th = document.createElement("th");
+                th.textContent = day;
+                headerRow.appendChild(th);
+            });
+            calendarTable.appendChild(headerRow);
+
+            // Calculate first day of first week
+            let currentDate = new Date(firstDay);
+            while (currentDate.getDay() !== 1) { // Start from Monday
+                currentDate.setDate(currentDate.getDate() - 1);
+            }
+
+            // Generate weeks
+            while (currentDate <= lastDay || currentDate.getDay() !== 1) {
+                const row = document.createElement("tr");
+
+                // Generate days for this week
+                for (let i = 0; i < 7; i++) {
+                    const cell = document.createElement("td");
+                    const dateStr = formatDate(currentDate);
+
+                    // Add date header
+                    const dateHeader = document.createElement("div");
+                    dateHeader.className = "date-header";
+                    dateHeader.textContent = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
+                    cell.appendChild(dateHeader);
+
+                    // Create container for all locations
+                    const locationContainer = document.createElement("div");
+                    locationContainer.className = "location-container";
+
+                    // If date is not in current month, grey out the cell
+                    if (currentDate.getMonth() !== month) {
+                        cell.style.backgroundColor = "#f5f5f5";
+                        cell.style.color = "#999";
+                    }
+
+                    // Check for time off requests
+                    const timeOffRequest = requests.find(request => {
+                        const start = new Date(request.startDate);
+                        const end = new Date(request.endDate);
+                        return currentDate >= start && currentDate <= end;
+                    });
+
+                    // Add each location box
+                    const locations = ["MCH1", "MCH2", "MDH", "BAH", "MPH"];
+                    locations.forEach(location => {
+                        const key = `${dateStr}_${location}`;
+                        const locationBox = document.createElement("div");
+                        locationBox.className = "assignment";
+
+                        const locationLabel = document.createElement("span");
+                        locationLabel.className = "location-label";
+                        locationLabel.textContent = location + ": ";
+                        locationBox.appendChild(locationLabel);
+
+                        const assignmentSpan = document.createElement("span");
+
+                        if (timeOffRequest) {
+                            // Show time off request
+                            assignmentSpan.textContent = timeOffRequest.name + " (Time Off)";
+                            locationBox.classList.add("time-off");
+                        } else {
+                            // Check for duty request
+                            const dutyRequest = dutyRequests.find(req => 
+                                req.date === dateStr && req.location === location
+                            );
+
+                            if (dutyRequest) {
+                                assignmentSpan.textContent = dutyRequest.name + " (Requested)";
+                                locationBox.classList.add("duty-requested");
+                            } else if (schedule[key]) {
+                                // Show assigned doctor
+                                assignmentSpan.textContent = schedule[key];
+                                locationBox.classList.add("assigned");
+                            } else {
+                                assignmentSpan.textContent = "Click to assign";
+                                assignmentSpan.style.color = "#999";
+                                assignmentSpan.style.fontStyle = "italic";
+                            }
+                        }
+
+                        locationBox.appendChild(assignmentSpan);
+                        if (currentDate.getMonth() === month && !timeOffRequest) {
+                            locationBox.addEventListener("click", () => assignName(key, assignmentSpan, locationBox));
+                        }
+                        locationContainer.appendChild(locationBox);
+                    });
+
+                    cell.appendChild(locationContainer);
+                    row.appendChild(cell);
+
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                calendarTable.appendChild(row);
+            }
+        }
+
+        function assignName(key, assignmentSpan, locationBox) {
+            const name = prompt(`Enter doctor name for ${key}:`);
+            if (name) {
+                schedule[key] = name;
+                localStorage.setItem('schedule', JSON.stringify(schedule));
+                assignmentSpan.textContent = name;
+                assignmentSpan.style.color = "";
+                assignmentSpan.style.fontStyle = "";
+                locationBox.classList.add("assigned");
+            }
+        }
+
+        function copyLink() {
+            const linkInput = document.getElementById('requestLink');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+
+        function updateDutyRequestList() {
+            const requestList = document.getElementById("dutyRequestList");
+            requestList.innerHTML = "";
+
+            // Group requests by name, location, and consecutive dates
+            const groupedRequests = [];
+            let currentGroup = null;
+
+            // Sort requests by date
+            const sortedRequests = [...dutyRequests].sort((a, b) => 
+                new Date(a.date) - new Date(b.date)
+            );
+
+            sortedRequests.forEach(request => {
+                if (!currentGroup || 
+                    currentGroup.name !== request.name || 
+                    currentGroup.location !== request.location || 
+                    !isConsecutiveDate(currentGroup.endDate, request.date)) {
+                    currentGroup = {
+                        name: request.name,
+                        location: request.location,
+                        startDate: request.date,
+                        endDate: request.date
+                    };
+                    groupedRequests.push(currentGroup);
+                } else {
+                    currentGroup.endDate = request.date;
+                }
+            });
+
+            groupedRequests.forEach(group => {
+                const li = document.createElement("div");
+                li.className = "duty-request-item";
+                
+                const dateRange = group.startDate === group.endDate ? 
+                    group.startDate : 
+                    `${group.startDate} to ${group.endDate}`;
+                    
+                li.innerHTML = `
+                    <span>${group.name} - ${group.location}: ${dateRange}</span>
+                    <button class="delete-btn" onclick="deleteDutyRequest('${group.name}', '${group.location}', '${group.startDate}', '${group.endDate}')">×</button>
+                `;
+                
+                requestList.appendChild(li);
+            });
+        }
+
+        function isConsecutiveDate(date1, date2) {
+            if (!date1 || !date2) return false;
+            const d1 = new Date(date1);
+            const d2 = new Date(date2);
+            d1.setDate(d1.getDate() + 1);
+            return d1.toISOString().split('T')[0] === date2;
+        }
+
+        function deleteDutyRequest(name, location, startDate, endDate) {
+            if (confirm('Are you sure you want to delete this duty request?')) {
+                dutyRequests = dutyRequests.filter(request => {
+                    const requestDate = new Date(request.date);
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    return !(request.name === name && 
+                            request.location === location && 
+                            requestDate >= start && 
+                            requestDate <= end);
+                });
+                
+                localStorage.setItem('dutyRequests', JSON.stringify(dutyRequests));
+                updateDutyRequestList();
+                generateCalendar();
+            }
+        }
+
+        function addTimeOffRequest() {
+            const name = document.getElementById("timeOffName").value;
+            const startDate = document.getElementById("timeOffStartDate").value;
+            const endDate = document.getElementById("timeOffEndDate").value;
+
+            if (!name || !startDate || !endDate) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert("End date cannot be before start date");
+                return;
+            }
+
+            // Add new request
+            requests.push({ name, startDate, endDate });
+            
+            // Save to localStorage
+            localStorage.setItem('requests', JSON.stringify(requests));
+
+            // Update displays
+            updateTimeOffRequestList();
+            updateTimeOffSummary();
+            generateCalendar();
+
+            // Clear form
+            document.getElementById("timeOffName").value = "";
+            document.getElementById("timeOffStartDate").value = "";
+            document.getElementById("timeOffEndDate").value = "";
+
+            alert("Time off request submitted successfully!");
+        }
+
+        function updateTimeOffRequestList() {
+            const requestList = document.getElementById("timeOffRequestList");
+            requestList.innerHTML = "";
+
+            requests.forEach((request, index) => {
+                const li = document.createElement("div");
+                li.className = "duty-request-item";
+                
+                li.innerHTML = `
+                    <span>${request.name}: ${request.startDate} to ${request.endDate}</span>
+                    <button class="delete-btn" onclick="deleteTimeOffRequest(${index})">×</button>
+                `;
+                
+                requestList.appendChild(li);
+            });
+        }
+
+        function deleteTimeOffRequest(index) {
+            if (confirm('Are you sure you want to delete this time off request?')) {
+                requests.splice(index, 1);
+                localStorage.setItem('requests', JSON.stringify(requests));
+                updateTimeOffRequestList();
+                updateTimeOffSummary();
+                generateCalendar();
+            }
+        }
+
+        function updateTimeOffSummary() {
+            const summaryYear = parseInt(document.getElementById("summaryYear").value);
+            const summaryTable = document.getElementById("timeOffSummary");
+            summaryTable.innerHTML = "";
+
+            // Get unique names from requests
+            const names = [...new Set(requests.map(request => request.name))];
+            if (names.length === 0) {
+                summaryTable.innerHTML = "<tr><td>No time off requests found</td></tr>";
+                return;
+            }
+
+            // Create header row with months
+            const headerRow = document.createElement("tr");
+            headerRow.innerHTML = "<th>Name</th>";
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Total"];
+            months.forEach(month => {
+                headerRow.innerHTML += `<th>${month}</th>`;
+            });
+            summaryTable.appendChild(headerRow);
+
+            // Calculate days for each person
+            names.forEach(name => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${name}</td>`;
+                
+                let yearTotal = 0;
+                
+                // Calculate days for each month
+                for (let month = 0; month < 12; month++) {
+                    let monthDays = 0;
+                    
+                    // Get all requests for this person in this month
+                    const personRequests = requests.filter(request => {
+                        const startDate = new Date(request.startDate);
+                        const endDate = new Date(request.endDate);
+                        return request.name === name &&
+                               startDate.getFullYear() === summaryYear &&
+                               (startDate.getMonth() === month || endDate.getMonth() === month);
+                    });
+
+                    // Calculate days in this month
+                    personRequests.forEach(request => {
+                        const startDate = new Date(request.startDate);
+                        const endDate = new Date(request.endDate);
+                        
+                        // Adjust dates to month boundaries if needed
+                        const monthStart = new Date(summaryYear, month, 1);
+                        const monthEnd = new Date(summaryYear, month + 1, 0);
+                        
+                        const effectiveStart = new Date(Math.max(startDate, monthStart));
+                        const effectiveEnd = new Date(Math.min(endDate, monthEnd));
+                        
+                        const days = Math.ceil((effectiveEnd - effectiveStart) / (1000 * 60 * 60 * 24)) + 1;
+                        monthDays += Math.max(0, days);
+                    });
+
+                    yearTotal += monthDays;
+                    row.innerHTML += `<td>${monthDays || '-'}</td>`;
+                }
+
+                // Add year total
+                row.innerHTML += `<td class="year-total">${yearTotal}</td>`;
+                summaryTable.appendChild(row);
+            });
+        }
 
         // Initialize when page loads
         window.addEventListener('load', () => {
@@ -326,6 +828,24 @@
             updateTimeOffSummary();
             updateDutyRequestList();
         });
+
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let content of tabContents) {
+                content.classList.remove("active");
+            }
+
+            // Remove active class from all tab buttons
+            const tabButtons = document.getElementsByClassName("tab-button");
+            for (let button of tabButtons) {
+                button.classList.remove("active");
+            }
+
+            // Show the selected tab content and mark button as active
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
     </script>
 </body>
 </html> 
