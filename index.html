@@ -6,7 +6,176 @@
     <title>Monthly Schedule Maker</title>
     <!-- Copy all the styles from your original schedule_maker.html -->
     <style>
-        /* Copy all your existing styles here */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .duty-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .duty-form input,
+        .duty-form select,
+        .duty-form button {
+            padding: 12px;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .duty-form button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            grid-column: span 2;
+        }
+
+        .duty-form button:hover {
+            background-color: #2980b9;
+        }
+
+        .link-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e8ef;
+        }
+
+        .request-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .request-link-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .request-link {
+            width: calc(100% - 120px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+        }
+
+        .copy-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .requests {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #dutyRequestList {
+            list-style: none;
+            padding: 0;
+        }
+
+        .duty-request-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e1e8ef;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            background-color: #f8f9fa;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .duty-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .duty-form button {
+                grid-column: 1;
+            }
+
+            .request-link {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .copy-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
