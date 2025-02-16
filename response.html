@@ -47,38 +47,6 @@
             font-weight: 600;
         }
 
-        .response-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: var(--bg-color);
-            padding: 8px;
-            border-radius: 16px;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 15px 25px;
-            border: none;
-            border-radius: 12px;
-            background: transparent;
-            color: var(--text-color);
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 15px;
-        }
-
-        .tab-button:hover {
-            background: rgba(52, 152, 219, 0.1);
-        }
-
-        .tab-button.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        }
-
         .form-group {
             margin-bottom: 25px;
         }
@@ -113,6 +81,7 @@
             border-radius: 16px;
             margin-bottom: 30px;
             border: 1px solid var(--border-color);
+            animation: slideIn 0.3s ease-out;
         }
 
         .date-range-group h3 {
@@ -125,7 +94,7 @@
         button[type="submit"] {
             width: 100%;
             padding: 16px;
-            background: var(--primary);
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
             color: white;
             border: none;
             border-radius: 12px;
@@ -137,7 +106,6 @@
         }
 
         button[type="submit"]:hover {
-            background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
@@ -166,22 +134,10 @@
             }
         }
 
-        .tab-content {
-            display: none;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-            opacity: 1;
-            animation: slideIn 0.3s ease-out;
-        }
-
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -189,7 +145,54 @@
             }
         }
 
-        /* Responsive Design */
+        /* Modern tab styles */
+        .response-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: var(--bg-color);
+            padding: 8px;
+            border-radius: 16px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Responsive design */
         @media (max-width: 768px) {
             .response-container {
                 padding: 25px;
@@ -215,10 +218,10 @@
     <div class="response-container">
         <h1>Schedule Response</h1>
         
-        <!-- Add tabs -->
+        <!-- Update the tab buttons -->
         <div class="response-tabs">
-            <button type="button" class="tab-button active" onclick="switchTab('duty')">Duty Request</button>
-            <button type="button" class="tab-button" onclick="switchTab('timeoff')">Time Off Request</button>
+            <button type="button" class="tab-button" onclick="switchTab('duty')" id="dutyTabBtn">Duty Request</button>
+            <button type="button" class="tab-button" onclick="switchTab('timeoff')" id="timeOffTabBtn">Time Off Request</button>
         </div>
 
         <form id="responseForm" onsubmit="submitResponse(event)">
@@ -313,7 +316,36 @@
                 return false;
             }
 
+            // Check for maximum range
+            const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+            if (daysDiff > 14) {
+                alert('Date range cannot exceed 14 days');
+                return false;
+            }
+
             return true;
+        }
+
+        function checkDateOverlap(startDate, endDate, name) {
+            const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+            
+            for (const request of Object.values(currentRequests)) {
+                if (request.responses) {
+                    for (const [respName, resp] of Object.entries(request.responses)) {
+                        if (respName === name && request.id !== requestId) continue;
+                        
+                        const existingStart = new Date(resp.startDate);
+                        const existingEnd = new Date(resp.endDate);
+                        const newStart = new Date(startDate);
+                        const newEnd = new Date(endDate);
+
+                        if (newStart <= existingEnd && newEnd >= existingStart) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         function switchTab(tabName) {
@@ -326,26 +358,76 @@
                 }
             });
 
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            if (tabName === 'duty') {
-                document.getElementById('dutyFields').classList.add('active');
-                document.getElementById('location').required = true;
-                document.getElementById('dutyStartDate').required = true;
-                document.getElementById('dutyEndDate').required = true;
-                document.getElementById('timeOffStartDate').required = false;
-                document.getElementById('timeOffEndDate').required = false;
-            } else {
+            // Hide all contents first
+            document.getElementById('dutyFields').style.display = 'none';
+            document.getElementById('timeOffFields').style.display = 'none';
+
+            // Show selected content
+            if (tabName === 'timeoff') {
+                document.getElementById('timeOffFields').style.display = 'block';
                 document.getElementById('timeOffFields').classList.add('active');
+                document.getElementById('dutyFields').classList.remove('active');
+                
+                // Update form type
+                document.getElementById('responseForm').dataset.type = 'timeoff';
+                
+                // Update required fields
                 document.getElementById('location').required = false;
                 document.getElementById('dutyStartDate').required = false;
                 document.getElementById('dutyEndDate').required = false;
                 document.getElementById('timeOffStartDate').required = true;
                 document.getElementById('timeOffEndDate').required = true;
+            } else {
+                document.getElementById('dutyFields').style.display = 'block';
+                document.getElementById('dutyFields').classList.add('active');
+                document.getElementById('timeOffFields').classList.remove('active');
+                
+                // Update form type
+                document.getElementById('responseForm').dataset.type = 'duty';
+                
+                // Update required fields
+                document.getElementById('location').required = true;
+                document.getElementById('dutyStartDate').required = true;
+                document.getElementById('dutyEndDate').required = true;
+                document.getElementById('timeOffStartDate').required = false;
+                document.getElementById('timeOffEndDate').required = false;
             }
+        }
+
+        function handleError(error, message = 'An error occurred. Please try again.') {
+            console.error('Error:', error);
+            alert(message);
+            return false;
+        }
+
+        function validateForm(isDuty) {
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                alert('Please enter your name');
+                return false;
+            }
+
+            // Make sure we're validating based on the actual request type
+            if (requestType === 'duty') {
+                const location = document.getElementById('location').value;
+                const startDate = document.getElementById('dutyStartDate').value;
+                const endDate = document.getElementById('dutyEndDate').value;
+
+                if (!location || !startDate || !endDate) {
+                    alert('Please fill in all duty request fields');
+                    return false;
+                }
+            } else {
+                const startDate = document.getElementById('timeOffStartDate').value;
+                const endDate = document.getElementById('timeOffEndDate').value;
+
+                if (!startDate || !endDate) {
+                    alert('Please fill in all time off request fields');
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         function submitResponse(event) {
@@ -355,34 +437,29 @@
             submitButton.disabled = true;
             submitButton.textContent = 'Submitting...';
 
-            const name = document.getElementById('name').value;
-            if (!name.trim()) {
-                alert('Please enter your name');
-                submitButton.disabled = false;
-                submitButton.textContent = 'Submit Response';
-                return;
-            }
-
-            const activeTab = document.querySelector('.tab-content.active').id;
-            const isDuty = activeTab === 'dutyFields';
-
-            let response = {
-                name: name,
-                date: new Date().toISOString(),
-                processed: false,
-                type: isDuty ? 'duty' : 'timeoff'
-            };
-
             try {
-                if (isDuty) {
+                const formType = document.getElementById('responseForm').dataset.type;
+                const name = document.getElementById('name').value.trim();
+                
+                if (!name) {
+                    alert('Please enter your name');
+                    return;
+                }
+
+                let response = {
+                    name: name,
+                    date: new Date().toISOString(),
+                    processed: false,
+                    type: formType
+                };
+
+                if (formType === 'duty') {
                     response.startDate = document.getElementById('dutyStartDate').value;
                     response.endDate = document.getElementById('dutyEndDate').value;
                     response.location = document.getElementById('location').value;
 
-                    if (!response.startDate || !response.endDate || !response.location) {
+                    if (!response.location || !response.startDate || !response.endDate) {
                         alert('Please fill in all duty request fields');
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Submit Response';
                         return;
                     }
                 } else {
@@ -391,72 +468,141 @@
 
                     if (!response.startDate || !response.endDate) {
                         alert('Please fill in all time off request fields');
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Submit Response';
                         return;
                     }
                 }
 
-                // Validate date range
                 if (!validateDateRange(response.startDate, response.endDate)) {
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Submit Response';
                     return;
                 }
 
-                // Get existing requests
-                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                // Get current requests
+                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
                 
-                if (!emailRequests[requestId]) {
-                    throw new Error('Request not found');
+                if (!currentRequests[requestId]) {
+                    alert('This request has expired or is invalid.');
+                    return;
                 }
 
-                if (!emailRequests[requestId].responses) {
-                    emailRequests[requestId].responses = {};
+                // Save response
+                if (!currentRequests[requestId].responses) {
+                    currentRequests[requestId].responses = {};
                 }
 
-                emailRequests[requestId].responses[name] = response;
-                localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
-                
+                currentRequests[requestId].responses[name] = response;
+                localStorage.setItem('emailRequests', JSON.stringify(currentRequests));
+
                 // Show success message
                 document.getElementById('responseForm').style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
                 
+                // Update calendar in main page
+                updateCalendar(response);
+
                 // Redirect after 2 seconds
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
+
             } catch (error) {
-                console.error('Error accessing localStorage:', error);
-                alert('Error saving your response. Please try again later.');
+                console.error('Error submitting response:', error);
+                alert('Error saving your response. Please try again.');
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Submit Response';
             }
         }
 
-        // Update the initial request type handling
-        if (requestType === 'timeoff') {
-            if (emailRequests[requestId].type !== 'timeoff') {
-                alert('Invalid request type for this link.');
-                window.location.href = 'index.html';
-                return;
+        function updateCalendar(response) {
+            try {
+                const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+                
+                if (response.type === 'duty') {
+                    // For duty requests, create entries for each day in the range
+                    const start = new Date(response.startDate);
+                    const end = new Date(response.endDate);
+                    
+                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                        const dateStr = date.toISOString().split('T')[0];
+                        const key = `${dateStr}_${response.location}`;
+                        schedule[key] = response.name;
+                    }
+                } else {
+                    // For time off, mark all days in the range
+                    const start = new Date(response.startDate);
+                    const end = new Date(response.endDate);
+                    
+                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                        const dateStr = date.toISOString().split('T')[0];
+                        schedule[`${dateStr}_timeoff`] = response.name;
+                    }
+                }
+                
+                localStorage.setItem('schedule', JSON.stringify(schedule));
+            } catch (error) {
+                console.error('Error updating calendar:', error);
             }
-            switchTab('timeoff');
-        } else {
-            if (emailRequests[requestId].type !== 'duty') {
-                alert('Invalid request type for this link.');
-                window.location.href = 'index.html';
-                return;
-            }
-            switchTab('duty');
         }
 
-        // Set minimum date to today
-        document.getElementById('dutyStartDate').min = today;
-        document.getElementById('dutyEndDate').min = today;
-        document.getElementById('timeOffStartDate').min = today;
-        document.getElementById('timeOffEndDate').min = today;
+        // Get email requests first
+        const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+
+        // Update the validateRequest function
+        function validateRequest() {
+            if (!emailRequests[requestId]) {
+                alert('This request link has expired or is invalid.');
+                window.location.href = 'index.html';
+                return false;
+            }
+
+            return true;
+        }
+
+        // Call it before initialization
+        if (!validateRequest()) {
+            return;
+        }
+
+        // Initialize based on request type and validate
+        function initializeRequest() {
+            try {
+                // Set initial tab based on request type
+                const initialType = requestType || 'duty';
+                document.getElementById('responseForm').dataset.type = initialType;
+
+                // Hide both tab buttons initially
+                document.getElementById('dutyTabBtn').style.display = 'none';
+                document.getElementById('timeOffTabBtn').style.display = 'none';
+
+                // Show only the relevant tab button
+                if (initialType === 'timeoff') {
+                    document.getElementById('timeOffTabBtn').style.display = 'block';
+                    document.getElementById('timeOffTabBtn').classList.add('active');
+                    document.getElementById('timeOffFields').style.display = 'block';
+                    document.getElementById('timeOffFields').classList.add('active');
+                    document.getElementById('dutyFields').style.display = 'none';
+                } else {
+                    document.getElementById('dutyTabBtn').style.display = 'block';
+                    document.getElementById('dutyTabBtn').classList.add('active');
+                    document.getElementById('dutyFields').style.display = 'block';
+                    document.getElementById('dutyFields').classList.add('active');
+                    document.getElementById('timeOffFields').style.display = 'none';
+                }
+
+                // Set minimum dates
+                const dateInputs = document.querySelectorAll('input[type="date"]');
+                dateInputs.forEach(input => {
+                    input.min = today;
+                });
+
+            } catch (error) {
+                console.error('Error initializing form:', error);
+                alert('Error initializing form. Please try again.');
+            }
+        }
+
+        // Call initialization
+        initializeRequest();
     </script>
 </body>
 </html> 
