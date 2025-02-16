@@ -168,6 +168,7 @@
             font-size: 15px;
             position: relative;
             overflow: hidden;
+            opacity: 0.7;
         }
 
         .tab-button::after {
@@ -187,9 +188,9 @@
         }
 
         .tab-button.active {
-            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            opacity: 1;
+            background: var(--primary);
             color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
         /* Responsive design */
@@ -292,7 +293,104 @@
         .loading {
             animation: pulse 1.5s infinite;
         }
+
+        .redirect-message {
+            margin-top: 15px;
+            color: #666;
+            font-style: italic;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cancel-redirect-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-redirect-btn:hover {
+            background: #c0392b;
+        }
+
+        .redirect-cancelled {
+            color: #27ae60;
+            font-weight: 500;
+        }
+
+        .go-home-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .go-home-btn:hover {
+            background: #2980b9;
+        }
+
+        #countdown {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEtGTY5H210uZafIE1_foqe8ACwLN8aGo",
+            authDomain: "schedule-manager-5e9c3.firebaseapp.com",
+            databaseURL: "https://schedule-manager-5e9c3-default-rtdb.firebaseio.com",
+            projectId: "schedule-manager-5e9c3",
+            storageBucket: "schedule-manager-5e9c3.firebasestorage.app",
+            messagingSenderId: "517339603872",
+            appId: "1:517339603872:web:903bc9043f07ffb0e5bac5"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Make Firebase functions available globally
+        window.db = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbOnValue = onValue;
+
+        // Test database connection
+        const testRef = ref(db, 'test');
+        set(testRef, { status: 'connected', timestamp: new Date().toISOString() })
+            .then(() => {
+                console.log('Firebase connected successfully');
+                // Initialize the page after Firebase is ready
+                window.initializeRequest();
+            })
+            .catch(error => {
+                console.error('Firebase connection error:', error);
+                alert('Error connecting to database. Please refresh the page.');
+            });
+    </script>
 </head>
 <body>
     <div class="response-container">
@@ -300,7 +398,7 @@
         
         <!-- Update the tab buttons -->
         <div class="response-tabs">
-            <button type="button" class="tab-button" onclick="switchTab('duty')" id="dutyTabBtn">Duty Request</button>
+            <button type="button" class="tab-button active" onclick="switchTab('duty')" id="dutyTabBtn">Duty Request</button>
             <button type="button" class="tab-button" onclick="switchTab('timeoff')" id="timeOffTabBtn">Time Off Request</button>
         </div>
 
@@ -313,7 +411,8 @@
             <div id="dutyFields" class="tab-content active">
                 <div class="form-group">
                     <label for="location">Preferred Location:</label>
-                    <select id="location">
+                    <select id="location" required>
+                        <option value="">Select Location</option>
                         <option value="MCH1">MCH1</option>
                         <option value="MCH2">MCH2</option>
                         <option value="MDH">MDH</option>
@@ -326,11 +425,11 @@
                     <h3>Duty Date Range</h3>
                     <div class="form-group">
                         <label for="dutyStartDate">From:</label>
-                        <input type="date" id="dutyStartDate" class="date-input">
+                        <input type="date" id="dutyStartDate" required>
                     </div>
                     <div class="form-group">
                         <label for="dutyEndDate">To:</label>
-                        <input type="date" id="dutyEndDate" class="date-input">
+                        <input type="date" id="dutyEndDate" required>
                     </div>
                 </div>
             </div>
@@ -374,28 +473,46 @@
     </div>
 
     <script>
-        // Get request type from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const requestId = urlParams.get('id');
-        const requestType = urlParams.get('type');
+        // Add this right after your Firebase script
+        function initializeRequest() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestId = urlParams.get('id') || 'test123'; // Fallback for testing
+                const requestType = urlParams.get('type') || 'duty'; // Fallback for testing
 
-        if (!requestId || !requestType) {
-            alert('Invalid request link. Please use the link provided in the email.');
-            window.location.href = 'index.html';
+                console.log('Request ID:', requestId);
+                console.log('Request Type:', requestType);
+                
+                // Make requestId available globally
+                window.requestId = requestId;
+
+                // Set initial form state based on request type
+                if (requestType === 'timeoff') {
+                    switchTab('timeoff');
+                } else {
+                    switchTab('duty');
+                }
+
+                // Set minimum dates
+                const today = new Date().toISOString().split('T')[0];
+                document.querySelectorAll('input[type="date"]').forEach(input => {
+                    input.min = today;
+                });
+
+                // Display existing responses
+                displayResponses();
+            } catch (error) {
+                console.error('Error in initializeRequest:', error);
+                alert('Error initializing page: ' + error.message);
+            }
         }
-
-        if (!['duty', 'timeoff'].includes(requestType)) {
-            alert('Invalid request type.');
-            window.location.href = 'index.html';
-        }
-
-        // Move this to the top of the script section, before any functions
-        const today = new Date().toISOString().split('T')[0];
 
         function validateDateRange(startDate, endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
             const maxRange = new Date();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             maxRange.setMonth(maxRange.getMonth() + 6);
 
             if (end < start) {
@@ -403,7 +520,7 @@
                 return false;
             }
 
-            if (start < new Date(today)) {
+            if (start < today) {
                 alert('Start date cannot be in the past');
                 return false;
             }
@@ -457,48 +574,40 @@
         }
 
         function switchTab(tabName) {
-            // Update buttons
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                if (btn.textContent.toLowerCase().includes(tabName)) {
-                    btn.classList.add('active');
+            try {
+                // Update buttons
+                const dutyBtn = document.getElementById('dutyTabBtn');
+                const timeOffBtn = document.getElementById('timeOffTabBtn');
+                
+                if (tabName === 'timeoff') {
+                    timeOffBtn.classList.add('active');
+                    dutyBtn.classList.remove('active');
+                    document.getElementById('dutyFields').style.display = 'none';
+                    document.getElementById('timeOffFields').style.display = 'block';
+                    
+                    // Update required fields
+                    document.getElementById('timeOffStartDate').required = true;
+                    document.getElementById('timeOffEndDate').required = true;
+                    document.getElementById('location').required = false;
+                    document.getElementById('dutyStartDate').required = false;
+                    document.getElementById('dutyEndDate').required = false;
                 } else {
-                    btn.classList.remove('active');
+                    dutyBtn.classList.add('active');
+                    timeOffBtn.classList.remove('active');
+                    document.getElementById('timeOffFields').style.display = 'none';
+                    document.getElementById('dutyFields').style.display = 'block';
+                    
+                    // Update required fields
+                    document.getElementById('timeOffStartDate').required = false;
+                    document.getElementById('timeOffEndDate').required = false;
+                    document.getElementById('location').required = true;
+                    document.getElementById('dutyStartDate').required = true;
+                    document.getElementById('dutyEndDate').required = true;
                 }
-            });
 
-            // Hide all contents first
-            document.getElementById('dutyFields').style.display = 'none';
-            document.getElementById('timeOffFields').style.display = 'none';
-
-            // Show selected content
-            if (tabName === 'timeoff') {
-                document.getElementById('timeOffFields').style.display = 'block';
-                document.getElementById('timeOffFields').classList.add('active');
-                document.getElementById('dutyFields').classList.remove('active');
-                
-                // Update form type
-                document.getElementById('responseForm').dataset.type = 'timeoff';
-                
-                // Update required fields
-                document.getElementById('location').required = false;
-                document.getElementById('dutyStartDate').required = false;
-                document.getElementById('dutyEndDate').required = false;
-                document.getElementById('timeOffStartDate').required = true;
-                document.getElementById('timeOffEndDate').required = true;
-            } else {
-                document.getElementById('dutyFields').style.display = 'block';
-                document.getElementById('dutyFields').classList.add('active');
-                document.getElementById('timeOffFields').classList.remove('active');
-                
-                // Update form type
-                document.getElementById('responseForm').dataset.type = 'duty';
-                
-                // Update required fields
-                document.getElementById('location').required = true;
-                document.getElementById('dutyStartDate').required = true;
-                document.getElementById('dutyEndDate').required = true;
-                document.getElementById('timeOffStartDate').required = false;
-                document.getElementById('timeOffEndDate').required = false;
+                console.log('Switched to tab:', tabName);
+            } catch (error) {
+                console.error('Error switching tabs:', error);
             }
         }
 
@@ -508,14 +617,13 @@
             return false;
         }
 
-        function validateForm(isDuty) {
+        function validateForm(requestType) {
             const name = document.getElementById('name').value.trim();
             if (!name) {
                 alert('Please enter your name');
                 return false;
             }
 
-            // Make sure we're validating based on the actual request type
             if (requestType === 'duty') {
                 const location = document.getElementById('location').value;
                 const startDate = document.getElementById('dutyStartDate').value;
@@ -540,7 +648,8 @@
 
         function submitResponse(event) {
             event.preventDefault();
-            
+            console.log('Submitting response...');
+
             const submitButton = document.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = 'Submitting...';
@@ -552,17 +661,16 @@
                     return;
                 }
 
-                // Get the form type from the active tab
-                const formType = document.querySelector('.tab-button.active').textContent.toLowerCase().includes('duty') ? 'duty' : 'timeoff';
-                
+                // Get form type from active tab
+                const formType = document.getElementById('timeOffTabBtn').classList.contains('active') ? 'timeoff' : 'duty';
+                console.log('Form type:', formType);
+
                 let response = {
                     name: name,
                     date: new Date().toISOString(),
-                    type: formType,
-                    processed: false
+                    type: formType
                 };
 
-                // Get dates based on form type
                 if (formType === 'duty') {
                     response.startDate = document.getElementById('dutyStartDate').value;
                     response.endDate = document.getElementById('dutyEndDate').value;
@@ -582,218 +690,112 @@
                     }
                 }
 
-                // Validate date range
-                if (!validateDateRange(response.startDate, response.endDate)) {
-                    return;
-                }
+                // Save to Firebase
+                const responsePath = `responses/${window.requestId}/${name.replace(/[.#$\/\[\]]/g, '_')}`;
+                console.log('Saving to path:', responsePath);
+                console.log('Response data:', response);
 
-                // Save to localStorage
-                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                if (!emailRequests[requestId]) {
-                    emailRequests[requestId] = {
-                        id: requestId,
-                        type: formType,
-                        responses: {}
-                    };
-                }
-
-                // Add response
-                emailRequests[requestId].responses[name] = response;
-                localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
-
-                // Update schedule
-                updateCalendar(response);
-
-                // Show success and refresh display
-                document.getElementById('responseForm').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
-                displayResponses();
-
-                // Redirect after delay
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                dbSet(dbRef(db, responsePath), response)
+                    .then(() => {
+                        console.log('Response saved successfully');
+                        document.getElementById('responseForm').style.display = 'none';
+                        const successMessage = document.getElementById('successMessage');
+                        successMessage.style.display = 'block';
+                        successMessage.innerHTML = `
+                            <div class="response-name">${name}</div>
+                            <div class="response-date">
+                                <div>Period: ${new Date(response.startDate).toLocaleDateString()} to ${new Date(response.endDate).toLocaleDateString()}</div>
+                                <div>${formType === 'duty' ? `Location: ${response.location}` : 'Time Off Request'}</div>
+                            </div>
+                            <div class="redirect-message">
+                                Redirecting to home page in <span id="countdown">10</span> seconds...
+                                <button onclick="cancelRedirect()" class="cancel-redirect-btn">Stay on this page</button>
+                            </div>
+                        `;
+                        displayResponses();
+                        startRedirectCountdown();
+                    })
+                    .catch(error => {
+                        console.error('Error saving to Firebase:', error);
+                        alert('Error saving your response. Please try again.');
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Response';
+                    });
 
             } catch (error) {
-                console.error('Error submitting response:', error);
-                alert('Error saving your response. Please try again.');
-            } finally {
+                console.error('Error in submitResponse:', error);
+                alert('An unexpected error occurred. Please try again.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Submit Response';
             }
         }
 
-        function updateCalendar(response) {
-            try {
-                const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
-                
-                if (response.type === 'duty') {
-                    // For duty requests, create entries for each day in the range
-                    const start = new Date(response.startDate);
-                    const end = new Date(response.endDate);
-                    
-                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-                        const dateStr = date.toISOString().split('T')[0];
-                        const key = `${dateStr}_${response.location}`;
-                        schedule[key] = response.name;
-                    }
-                } else {
-                    // For time off, mark all days in the range
-                    const start = new Date(response.startDate);
-                    const end = new Date(response.endDate);
-                    
-                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-                        const dateStr = date.toISOString().split('T')[0];
-                        schedule[`${dateStr}_timeoff`] = response.name;
-                    }
-                }
-                
-                localStorage.setItem('schedule', JSON.stringify(schedule));
-            } catch (error) {
-                console.error('Error updating calendar:', error);
-            }
-        }
-
-        // Get email requests first
-        const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-
-        // Update the validateRequest function
-        function validateRequest() {
-            if (!emailRequests[requestId]) {
-                alert('This request link has expired or is invalid.');
-                window.location.href = 'index.html';
-                return false;
-            }
-
-            return true;
-        }
-
-        // Call it before initialization
-        if (!validateRequest()) {
-            return;
-        }
-
-        // Initialize based on request type and validate
-        function initializeRequest() {
-            try {
-                const initialType = requestType || 'duty';
-                document.getElementById('responseForm').dataset.type = initialType;
-
-                // Check for existing response
-                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                const request = currentRequests[requestId];
-                
-                if (request && request.responses) {
-                    const name = document.getElementById('name').value.trim();
-                    if (request.responses[name]) {
-                        alert('You have already responded to this request.');
-                        window.location.href = 'index.html';
-                        return;
-                    }
-                }
-
-                // Show only the relevant tab button
-                if (initialType === 'timeoff') {
-                    document.getElementById('timeOffTabBtn').style.display = 'block';
-                    document.getElementById('timeOffTabBtn').classList.add('active');
-                    document.getElementById('timeOffFields').style.display = 'block';
-                    document.getElementById('timeOffFields').classList.add('active');
-                    document.getElementById('dutyFields').style.display = 'none';
-                } else {
-                    document.getElementById('dutyTabBtn').style.display = 'block';
-                    document.getElementById('dutyTabBtn').classList.add('active');
-                    document.getElementById('dutyFields').style.display = 'block';
-                    document.getElementById('dutyFields').classList.add('active');
-                    document.getElementById('timeOffFields').style.display = 'none';
-                }
-
-                // Set minimum dates
-                const today = new Date().toISOString().split('T')[0];
-                document.querySelectorAll('input[type="date"]').forEach(input => {
-                    input.min = today;
-                });
-
-            } catch (error) {
-                console.error('Error initializing form:', error);
-                alert('Error initializing form. Please try again.');
-            }
-        }
-
         function displayResponses() {
             try {
-                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                const request = emailRequests[requestId];
-                
-                const dutyResponsesList = document.getElementById('dutyResponsesList');
-                const timeOffResponsesList = document.getElementById('timeOffResponsesList');
-                const noDutyResponses = document.getElementById('noDutyResponses');
-                const noTimeOffResponses = document.getElementById('noTimeOffResponses');
-                
-                // Clear existing responses
-                dutyResponsesList.innerHTML = '';
-                timeOffResponsesList.innerHTML = '';
-
-                if (!request || !request.responses) {
-                    console.log('No responses found for request:', requestId);
-                    noDutyResponses.style.display = 'block';
-                    noTimeOffResponses.style.display = 'block';
+                if (!window.requestId) {
+                    console.error('No requestId found');
                     return;
                 }
 
-                console.log('Found responses:', request.responses);
-                let hasDutyResponses = false;
-                let hasTimeOffResponses = false;
+                console.log('Fetching responses for requestId:', window.requestId);
+                const responsesRef = dbRef(db, `responses/${window.requestId}`);
+                
+                dbOnValue(responsesRef, (snapshot) => {
+                    const responses = snapshot.val() || {};
+                    console.log('Received response data:', responses);
+                    
+                    const dutyResponsesList = document.getElementById('dutyResponsesList');
+                    const timeOffResponsesList = document.getElementById('timeOffResponsesList');
+                    
+                    // Clear existing responses
+                    dutyResponsesList.innerHTML = '';
+                    timeOffResponsesList.innerHTML = '';
 
-                Object.entries(request.responses).forEach(([name, response]) => {
-                    const responseElement = document.createElement('div');
-                    responseElement.className = 'response-item';
-                    
-                    const dateRange = `${formatDate(response.startDate)} to ${formatDate(response.endDate)}`;
-                    const submittedDate = formatDate(response.date);
-                    
-                    if (response.type === 'duty') {
-                        hasDutyResponses = true;
-                        responseElement.innerHTML = `
-                            <div class="response-name">${name}</div>
-                            <div class="response-date">
-                                <div>Period: ${dateRange}</div>
-                                <div>Submitted: ${submittedDate}</div>
-                            </div>
-                            <div class="response-location">${response.location}</div>
-                        `;
-                        dutyResponsesList.appendChild(responseElement);
-                    } else {
-                        hasTimeOffResponses = true;
-                        responseElement.innerHTML = `
-                            <div class="response-name">${name}</div>
-                            <div class="response-date">
-                                <div>Period: ${dateRange}</div>
-                                <div>Submitted: ${submittedDate}</div>
-                            </div>
-                            <div class="response-location">Time Off</div>
-                        `;
-                        timeOffResponsesList.appendChild(responseElement);
-                    }
+                    // Update response lists
+                    Object.entries(responses).forEach(([name, response]) => {
+                        const responseElement = document.createElement('div');
+                        responseElement.className = 'response-item';
+                        
+                        // Format dates
+                        const startDate = new Date(response.startDate).toLocaleDateString();
+                        const endDate = new Date(response.endDate).toLocaleDateString();
+                        const submittedDate = new Date(response.date).toLocaleDateString();
+                        
+                        if (response.type === 'duty') {
+                            responseElement.innerHTML = `
+                                <div class="response-name">${name}</div>
+                                <div class="response-date">
+                                    <div>Period: ${startDate} to ${endDate}</div>
+                                    <div>Submitted: ${submittedDate}</div>
+                                </div>
+                                <div class="response-location">${response.location}</div>
+                            `;
+                            dutyResponsesList.appendChild(responseElement);
+                        } else {
+                            responseElement.innerHTML = `
+                                <div class="response-name">${name}</div>
+                                <div class="response-date">
+                                    <div>Period: ${startDate} to ${endDate}</div>
+                                    <div>Submitted: ${submittedDate}</div>
+                                </div>
+                                <div class="response-location">Time Off</div>
+                            `;
+                            timeOffResponsesList.appendChild(responseElement);
+                        }
+                    });
+
+                    // Show/hide "no responses" messages
+                    document.getElementById('noDutyResponses').style.display = 
+                        dutyResponsesList.children.length ? 'none' : 'block';
+                    document.getElementById('noTimeOffResponses').style.display = 
+                        timeOffResponsesList.children.length ? 'none' : 'block';
                 });
 
-                // Update visibility
-                noDutyResponses.style.display = hasDutyResponses ? 'none' : 'block';
-                noTimeOffResponses.style.display = hasTimeOffResponses ? 'none' : 'block';
-                document.getElementById('currentResponses').style.display = 'block';
-
             } catch (error) {
-                console.error('Error displaying responses:', error);
-                alert('Error loading responses. Please refresh the page.');
+                console.error('Error in displayResponses:', error);
             }
-        }
-
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
         }
 
         // Add this at the start of the script
@@ -802,10 +804,32 @@
             console.log('Current schedule:', JSON.parse(localStorage.getItem('schedule') || '{}'));
         }
 
-        // Call it after initialization
-        initializeRequest();
-        displayResponses();
-        debugStorage();
+        function cancelRedirect() {
+            if (window.redirectInterval) {
+                clearInterval(window.redirectInterval);
+                const redirectMessage = document.querySelector('.redirect-message');
+                redirectMessage.innerHTML = `
+                    <span class="redirect-cancelled">Redirect cancelled</span>
+                    <button onclick="window.location.href='index.html'" class="go-home-btn">Go to home page</button>
+                `;
+            }
+        }
+
+        function startRedirectCountdown() {
+            let timeLeft = 10;
+            const countdownElement = document.getElementById('countdown');
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = 'index.html';
+                }
+            }, 1000);
+
+            // Store interval ID to be able to cancel it
+            window.redirectInterval = countdownInterval;
+        }
     </script>
 </body>
 </html> 

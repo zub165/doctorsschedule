@@ -1535,110 +1535,71 @@
         function sendEmails(type) {
             try {
                 const emailList = document.getElementById('emailList').value;
-                if (!emailList.trim()) {
+                const emails = emailList.split(',').map(email => email.trim()).filter(email => email);
+                
+                if (emails.length === 0) {
                     alert('Please enter at least one email address');
                     return;
                 }
 
-                if (!validateDateRange()) {
-                    return;
-                }
-
-                const emails = emailList.split(/[\n,]+/)
-                    .map(email => email.trim())
-                    .filter(email => validateEmail(email));
-
-                if (emails.length === 0) {
-                    alert('No valid email addresses found');
-                    return;
-                }
-
-                const requestId = generateUniqueId();
-                const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-                const responseLink = `${basePath}response.html?id=${requestId}&type=${type}`;
-
-                // Show loading state
-                const sendButton = document.querySelector('.send-btn');
+                const sendButton = document.querySelector('button[type="submit"]');
                 sendButton.disabled = true;
                 sendButton.textContent = 'Sending...';
 
-                // Save request first
+                // Generate request ID and link
+                const requestId = Date.now().toString();
+                const responseLink = `${window.location.origin}/response.html?id=${requestId}&type=${type}`;
+                
+                // Add debug logs
+                console.log('Sending email request for type:', type);
+                console.log('Request ID:', requestId);
+                console.log('Generated link:', responseLink);
+                console.log('Sending to emails:', emails);
+
+                // Save request details
                 const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
                 emailRequests[requestId] = {
-                    id: requestId,
-                    date: new Date().toISOString(),
                     type: type,
-                    startDate: document.getElementById('startDate').value,
-                    endDate: document.getElementById('endDate').value,
-                    location: type === 'duty' ? document.getElementById('dutyLocation').value : 'N/A',
-                    status: 'pending',
-                    responses: {},
-                    recipients: emails
+                    date: new Date().toISOString(),
+                    emails: emails
                 };
+                
                 localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+                
+                // Create email content
+                const emailContent = `
+                    Please respond to the ${type} request by clicking this link:
+                    ${responseLink}
+                `;
 
                 // Send emails
-                let successCount = 0;
-                let failCount = 0;
-                const totalEmails = emails.length;
-
-                const sendPromises = emails.map(email => {
-                    const templateParams = {
+                emails.forEach(email => {
+                    emailjs.send("service_id", "template_id", {
                         to_email: email,
                         subject: `${type === 'timeoff' ? 'Time Off' : 'Duty'} Request`,
-                        message: `Please respond to this ${type === 'timeoff' ? 'time off' : 'duty'} request.`,
+                        message: emailContent,
                         response_link: responseLink,
                         start_date: document.getElementById('startDate').value,
-                        end_date: document.getElementById('endDate').value,
-                        location: type === 'duty' ? document.getElementById('dutyLocation').value : 'N/A',
-                        request_type: type
-                    };
-
-                    return emailjs.send('service_r7zbsnk', 'template_caa7lhp', templateParams)
-                        .then(() => {
-                            successCount++;
-                            sendButton.textContent = `Sending... (${successCount}/${totalEmails})`;
-                        })
-                        .catch(error => {
-                            console.error('Error sending email:', error);
-                            failCount++;
-                            return Promise.reject(error);
-                        });
-                });
-
-                Promise.allSettled(sendPromises)
-                    .then(results => {
-                        if (successCount > 0) {
-                            // Update request status
-                            emailRequests[requestId].status = 'sent';
-                            localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
-                            
-                            alert(`Successfully sent ${successCount} out of ${totalEmails} emails.`);
-                            closeEmailModal();
-                        } else {
-                            alert('Failed to send any emails. Please try again.');
-                            // Remove failed request
-                            delete emailRequests[requestId];
-                            localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
-                        }
+                        end_date: document.getElementById('endDate').value
+                    })
+                    .then(() => {
+                        console.log('Email sent successfully to:', email);
                     })
                     .catch(error => {
-                        console.error('Error in email sending:', error);
-                        alert('Error sending emails. Please try again.');
-                    })
-                    .finally(() => {
-                        sendButton.disabled = false;
-                        sendButton.textContent = 'Send Request';
+                        console.error('Error sending email to ' + email + ':', error);
                     });
+                });
 
+                alert('Request sent successfully!');
+                document.getElementById('emailList').value = '';
+                
             } catch (error) {
                 console.error('Error in sendEmails:', error);
-                alert('An unexpected error occurred. Please try again.');
-                const sendButton = document.querySelector('.send-btn');
-                if (sendButton) {
-                    sendButton.disabled = false;
-                    sendButton.textContent = 'Send Request';
-                }
+                alert('Error sending emails. Please try again.');
+            } finally {
+                const sendButton = document.querySelector('button[type="submit"]');
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send Request';
             }
         }
 
