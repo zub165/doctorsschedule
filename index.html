@@ -746,9 +746,103 @@
             padding: 12px;
             border: 1px solid #e1e8ef;
         }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .login-form input {
+            padding: 12px 16px;
+            border: 2px solid #e1e8ef;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .login-form button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .login-error {
+            color: #e74c3c;
+            text-align: center;
+            margin: 0;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .logged-in-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <!-- Add this right after <body> tag -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>Login Required</h2>
+            <div class="login-form">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p id="loginError" class="login-error"></p>
+            </div>
+        </div>
+    </div>
     <h1>Monthly Schedule Maker</h1>
     <div class="header">
         <select id="month">
@@ -870,6 +964,13 @@
         let schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
         let requests = JSON.parse(localStorage.getItem('requests') || '[]');
         let dutyRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
+
+        // Define valid credentials (in a real app, this would be server-side)
+        const VALID_CREDENTIALS = {
+            'admin': 'password123',
+            'user1': 'userpass',
+            'user2': 'userpass2'
+        };
 
         function formatDate(date) {
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -1408,9 +1509,7 @@
 
         // Initialize when page loads
         window.addEventListener('load', () => {
-            initializeTimeOff();
-            generateCalendar();
-            updateDutyRequestList();
+            checkAuth();
         });
 
         function updateActiveTab() {
@@ -1591,6 +1690,60 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        // Check if already logged in
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            const username = sessionStorage.getItem('username');
+            
+            if (isLoggedIn && username) {
+                showMainContent(username);
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (VALID_CREDENTIALS[username] === password) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('username', username);
+                showMainContent(username);
+            } else {
+                errorElement.textContent = 'Invalid username or password';
+                setTimeout(() => {
+                    errorElement.textContent = '';
+                }, 3000);
+            }
+        }
+
+        function showMainContent(username) {
+            // Hide login overlay
+            document.getElementById('loginOverlay').style.display = 'none';
+            
+            // Add logged-in user info
+            const userInfo = document.createElement('div');
+            userInfo.className = 'logged-in-info';
+            userInfo.innerHTML = `
+                <span>Logged in as: ${username}</span>
+                <button onclick="logout()" class="logout-btn">Logout</button>
+            `;
+            document.body.appendChild(userInfo);
+            
+            // Initialize the app
+            initializeTimeOff();
+            generateCalendar();
+            updateDutyRequestList();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            location.reload();
         }
     </script>
 </body>
