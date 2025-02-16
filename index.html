@@ -15,10 +15,12 @@
 
         h1 {
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2.5em;
+            color: #1a237e;
+            margin: 30px 0;
+            font-size: 2.8em;
             font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .header {
@@ -140,22 +142,37 @@
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 2px;
+            background: #f5f7fa;
+            padding: 5px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 800px;
         }
 
         .tab-button {
-            padding: 12px 24px;
-            background-color: #f8f9fa;
+            flex: 1;
+            padding: 15px 25px;
+            background: transparent;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            border-radius: 8px;
+            color: #666;
+            font-weight: 500;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+        }
+
+        .tab-button:hover {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
         }
 
         .tab-button.active {
-            background-color: #3498db;
+            background: #3498db;
             color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
         @media (max-width: 768px) {
@@ -173,6 +190,24 @@
             }
 
             .copy-btn {
+                width: 100%;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .tab-button {
+                width: 100%;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            input, select, button {
                 width: 100%;
             }
         }
@@ -236,10 +271,13 @@
 
         .tab-content {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .tab-content.active {
             display: block;
+            opacity: 1;
         }
 
         .summary-table {
@@ -312,13 +350,330 @@
             border-spacing: 0;
             margin: 20px 0;
             background-color: white;
-            border-radius: 10px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         }
 
         .tab-content .calendar {
             margin-top: 30px;
+        }
+
+        .email-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .email-input-container {
+            margin: 15px 0;
+        }
+
+        .email-input-container textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .preset-emails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .preset-emails button {
+            padding: 8px 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .preset-emails button:hover {
+            background-color: #e9ecef;
+        }
+
+        .email-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .email-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .email-buttons button:first-child {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .email-buttons button:last-child {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .group-name-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .save-group-btn {
+            background-color: #2ecc71 !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .save-group-btn:hover {
+            background-color: #27ae60 !important;
+        }
+
+        .groups-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+
+        .group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #e1e8ef;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .manage-groups-btn {
+            background-color: #3498db !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .manage-groups-btn:hover {
+            background-color: #2980b9 !important;
+        }
+
+        .summary-table td {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .summary-table th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+        }
+
+        .year-total {
+            background-color: #e8f5e9 !important;
+            color: #2e7d32 !important;
+            font-weight: bold;
+        }
+
+        .summary-table tr:hover td {
+            background-color: #f5f5f5;
+        }
+
+        .time-off-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #ffebee;
+            border: 1px solid #ef5350;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .time-off-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .time-off-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .time-off-details strong {
+            color: #d32f2f;
+            font-size: 16px;
+        }
+
+        .time-off-details span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        #timeOffTab .request-section {
+            max-width: 600px;
+            margin: 0 auto 20px auto;
+        }
+
+        #timeOffTab .requests {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #timeOffTab .duty-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        #timeOffTab .duty-form button {
+            grid-column: span 3;
+            background-color: #ef5350;
+        }
+
+        #timeOffTab .duty-form button:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Modern form inputs */
+        input, select, textarea {
+            padding: 12px 16px;
+            border: 2px solid #e1e8ef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        /* Modern buttons */
+        button {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .request-link-btn, .save-group-btn {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .request-link-btn:hover, .save-group-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        /* Modern cards */
+        .request-section, .requests {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        /* Time off items */
+        .time-off-item {
+            background: linear-gradient(45deg, #ffebee, #fff);
+            border: none;
+            box-shadow: 0 4px 15px rgba(239, 83, 80, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .time-off-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 83, 80, 0.2);
+        }
+
+        /* Summary table */
+        .summary-table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-table th {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px;
+            font-weight: 500;
+        }
+
+        .summary-table td {
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+
+        /* Email modal */
+        .email-modal {
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header controls */
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        /* Calendar improvements */
+        .calendar {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .date-header {
+            font-weight: 500;
+            color: #1a237e;
+            border-bottom: 2px solid #e1e8ef;
         }
     </style>
 </head>
@@ -343,10 +698,6 @@
         <button onclick="generateCalendar()">Update Calendar</button>
     </div>
 
-    <div class="navigation">
-        <button onclick="window.location.href='schedule_maker.html'" class="nav-btn">Go to Schedule Maker</button>
-    </div>
-
     <div class="tabs">
         <button class="tab-button active" onclick="openTab(event, 'dutyTab')">Ask for Duty</button>
         <button class="tab-button" onclick="openTab(event, 'timeOffTab')">Request Time Off</button>
@@ -354,7 +705,7 @@
     </div>
 
     <!-- Duty Tab -->
-    <div id="dutyTab" class="tab-content active">
+    <div id="dutyTab" class="tab-content">
         <div class="request-section">
             <h2>Ask for Duty</h2>
             <div class="duty-form">
@@ -402,9 +753,6 @@
             <h2>Current Time Off Requests</h2>
             <ul id="timeOffRequestList"></ul>
         </div>
-        <table id="calendar-timeoff" class="calendar">
-            <!-- Calendar will be generated here -->
-        </table>
     </div>
 
     <!-- Summary Tab -->
@@ -421,9 +769,6 @@
                 </table>
             </div>
         </div>
-        <table id="calendar-summary" class="calendar">
-            <!-- Calendar will be generated here -->
-        </table>
     </div>
 
     <script>
@@ -495,6 +840,46 @@
         }
 
         function emailRequestLink() {
+            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+            const groupButtons = Object.keys(savedGroups).map(groupName => 
+                `<button onclick="usePresetEmails('${groupName}')">${groupName}</button>`
+            ).join('');
+
+            const emailModal = document.createElement('div');
+            emailModal.innerHTML = `
+                <div class="email-modal">
+                    <h3>Send Request Links</h3>
+                    <div class="email-input-container">
+                        <textarea id="emailList" placeholder="Enter email addresses (one per line or separated by commas)" rows="4"></textarea>
+                        <div class="preset-emails">
+                            ${groupButtons}
+                            <button onclick="saveEmailGroup()" class="save-group-btn">+ Save New Group</button>
+                            <button onclick="manageEmailGroups()" class="manage-groups-btn">Manage Groups</button>
+                        </div>
+                    </div>
+                    <div class="email-buttons">
+                        <button onclick="sendEmails()">Send</button>
+                        <button onclick="closeEmailModal()">Cancel</button>
+                    </div>
+                </div>
+                <div class="modal-overlay"></div>
+            `;
+            document.body.appendChild(emailModal);
+        }
+
+        function usePresetEmails(group) {
+            const emailList = document.getElementById('emailList');
+            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+            
+            if (savedGroups[group]) {
+                emailList.value = savedGroups[group].join('\n');
+            }
+        }
+
+        function sendEmails() {
+            const emailList = document.getElementById('emailList').value;
+            const emails = emailList.split(/[\n,]+/).map(email => email.trim()).filter(email => email);
+            
             const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
             const dutyLink = basePath + 'duty_request.html';
             const scheduleLink = basePath + 'schedule_maker.html';
@@ -504,129 +889,174 @@
                 `Submit Duty Request: ${dutyLink}\n` +
                 `View Schedule: ${scheduleLink}`;
             
-            const mailtoLink = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+            const mailtoLink = `mailto:${emails.join(',')}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
             window.location.href = mailtoLink;
+            
+            closeEmailModal();
+        }
+
+        function closeEmailModal() {
+            const modal = document.querySelector('.email-modal').parentElement;
+            document.body.removeChild(modal);
+        }
+
+        function saveEmailGroup() {
+            const emailModal = document.createElement('div');
+            emailModal.innerHTML = `
+                <div class="email-modal">
+                    <h3>Save Email Group</h3>
+                    <div class="email-input-container">
+                        <input type="text" id="groupName" placeholder="Enter group name" class="group-name-input">
+                        <textarea id="emailList" placeholder="Enter email addresses (one per line or separated by commas)" rows="4"></textarea>
+                    </div>
+                    <div class="email-buttons">
+                        <button onclick="saveGroup()">Save Group</button>
+                        <button onclick="closeEmailModal()">Cancel</button>
+                    </div>
+                </div>
+                <div class="modal-overlay"></div>
+            `;
+            document.body.appendChild(emailModal);
+        }
+
+        function saveGroup() {
+            const groupName = document.getElementById('groupName').value.trim();
+            const emailList = document.getElementById('emailList').value;
+            const emails = emailList.split(/[\n,]+/).map(email => email.trim()).filter(email => email);
+            
+            if (!groupName) {
+                alert('Please enter a group name');
+                return;
+            }
+            if (emails.length === 0) {
+                alert('Please enter at least one email address');
+                return;
+            }
+
+            // Get existing groups or initialize empty object
+            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+            savedGroups[groupName] = emails;
+            localStorage.setItem('emailGroups', JSON.stringify(savedGroups));
+            
+            closeEmailModal();
+            alert(`Email group "${groupName}" saved successfully!`);
         }
 
         // Add the missing functions
         function generateCalendar() {
-            // Update all calendar tables
-            const calendarIds = ['calendar', 'calendar-timeoff', 'calendar-summary'];
+            // Update only the duty tab calendar
+            const calendarTable = document.getElementById('calendar');
+            if (!calendarTable) return;
             
-            calendarIds.forEach(calendarId => {
-                const calendarTable = document.getElementById(calendarId);
-                if (!calendarTable) return; // Skip if table doesn't exist
-                
-                calendarTable.innerHTML = "";
+            calendarTable.innerHTML = "";
 
-                const month = parseInt(document.getElementById("month").value);
-                const year = parseInt(document.getElementById("year").value);
+            const month = parseInt(document.getElementById("month").value);
+            const year = parseInt(document.getElementById("year").value);
 
-                // Get first day and last day of month
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
+            // Get first day and last day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
 
-                // Create header row with day names
-                const headerRow = document.createElement("tr");
-                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                dayNames.forEach(day => {
-                    const th = document.createElement("th");
-                    th.textContent = day;
-                    headerRow.appendChild(th);
-                });
-                calendarTable.appendChild(headerRow);
+            // Create header row with day names
+            const headerRow = document.createElement("tr");
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            dayNames.forEach(day => {
+                const th = document.createElement("th");
+                th.textContent = day;
+                headerRow.appendChild(th);
+            });
+            calendarTable.appendChild(headerRow);
 
-                // Calculate first day of first week
-                let currentDate = new Date(firstDay);
-                while (currentDate.getDay() !== 1) { // Start from Monday
-                    currentDate.setDate(currentDate.getDate() - 1);
-                }
+            // Calculate first day of first week
+            let currentDate = new Date(firstDay);
+            while (currentDate.getDay() !== 1) { // Start from Monday
+                currentDate.setDate(currentDate.getDate() - 1);
+            }
 
-                // Generate weeks
-                while (currentDate <= lastDay || currentDate.getDay() !== 1) {
-                    const row = document.createElement("tr");
+            // Generate weeks
+            while (currentDate <= lastDay || currentDate.getDay() !== 1) {
+                const row = document.createElement("tr");
 
-                    // Generate days for this week
-                    for (let i = 0; i < 7; i++) {
-                        const cell = document.createElement("td");
-                        const dateStr = formatDate(currentDate);
+                // Generate days for this week
+                for (let i = 0; i < 7; i++) {
+                    const cell = document.createElement("td");
+                    const dateStr = formatDate(currentDate);
 
-                        // Add date header
-                        const dateHeader = document.createElement("div");
-                        dateHeader.className = "date-header";
-                        dateHeader.textContent = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
-                        cell.appendChild(dateHeader);
+                    // Add date header
+                    const dateHeader = document.createElement("div");
+                    dateHeader.className = "date-header";
+                    dateHeader.textContent = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
+                    cell.appendChild(dateHeader);
 
-                        // Create container for all locations
-                        const locationContainer = document.createElement("div");
-                        locationContainer.className = "location-container";
+                    // Create container for all locations
+                    const locationContainer = document.createElement("div");
+                    locationContainer.className = "location-container";
 
-                        // If date is not in current month, grey out the cell
-                        if (currentDate.getMonth() !== month) {
-                            cell.style.backgroundColor = "#f5f5f5";
-                            cell.style.color = "#999";
+                    // If date is not in current month, grey out the cell
+                    if (currentDate.getMonth() !== month) {
+                        cell.style.backgroundColor = "#f5f5f5";
+                        cell.style.color = "#999";
+                    }
+
+                    // Check for time off requests
+                    const timeOffRequest = requests.find(request => {
+                        const start = new Date(request.startDate);
+                        const end = new Date(request.endDate);
+                        return currentDate >= start && currentDate <= end;
+                    });
+
+                    // Add each location box
+                    const locations = ["MCH1", "MCH2", "MDH", "BAH", "MPH"];
+                    locations.forEach(location => {
+                        const key = `${dateStr}_${location}`;
+                        const locationBox = document.createElement("div");
+                        locationBox.className = "assignment";
+
+                        const locationLabel = document.createElement("span");
+                        locationLabel.className = "location-label";
+                        locationLabel.textContent = location + ": ";
+                        locationBox.appendChild(locationLabel);
+
+                        const assignmentSpan = document.createElement("span");
+
+                        if (timeOffRequest) {
+                            // Show time off request
+                            assignmentSpan.textContent = timeOffRequest.name + " (Time Off)";
+                            locationBox.classList.add("time-off");
+                        } else {
+                            // Check for duty request
+                            const dutyRequest = dutyRequests.find(req => 
+                                req.date === dateStr && req.location === location
+                            );
+
+                            if (dutyRequest) {
+                                assignmentSpan.textContent = dutyRequest.name + " (Requested)";
+                                locationBox.classList.add("duty-requested");
+                            } else if (schedule[key]) {
+                                // Show assigned doctor
+                                assignmentSpan.textContent = schedule[key];
+                                locationBox.classList.add("assigned");
+                            } else {
+                                assignmentSpan.textContent = "Click to assign";
+                                assignmentSpan.style.color = "#999";
+                                assignmentSpan.style.fontStyle = "italic";
+                            }
                         }
 
-                        // Check for time off requests
-                        const timeOffRequest = requests.find(request => {
-                            const start = new Date(request.startDate);
-                            const end = new Date(request.endDate);
-                            return currentDate >= start && currentDate <= end;
-                        });
+                        locationBox.appendChild(assignmentSpan);
+                        if (currentDate.getMonth() === month && !timeOffRequest) {
+                            locationBox.addEventListener("click", () => assignName(key, assignmentSpan, locationBox));
+                        }
+                        locationContainer.appendChild(locationBox);
+                    });
 
-                        // Add each location box
-                        const locations = ["MCH1", "MCH2", "MDH", "BAH", "MPH"];
-                        locations.forEach(location => {
-                            const key = `${dateStr}_${location}`;
-                            const locationBox = document.createElement("div");
-                            locationBox.className = "assignment";
+                    cell.appendChild(locationContainer);
+                    row.appendChild(cell);
 
-                            const locationLabel = document.createElement("span");
-                            locationLabel.className = "location-label";
-                            locationLabel.textContent = location + ": ";
-                            locationBox.appendChild(locationLabel);
-
-                            const assignmentSpan = document.createElement("span");
-
-                            if (timeOffRequest) {
-                                // Show time off request
-                                assignmentSpan.textContent = timeOffRequest.name + " (Time Off)";
-                                locationBox.classList.add("time-off");
-                            } else {
-                                // Check for duty request
-                                const dutyRequest = dutyRequests.find(req => 
-                                    req.date === dateStr && req.location === location
-                                );
-
-                                if (dutyRequest) {
-                                    assignmentSpan.textContent = dutyRequest.name + " (Requested)";
-                                    locationBox.classList.add("duty-requested");
-                                } else if (schedule[key]) {
-                                    // Show assigned doctor
-                                    assignmentSpan.textContent = schedule[key];
-                                    locationBox.classList.add("assigned");
-                                } else {
-                                    assignmentSpan.textContent = "Click to assign";
-                                    assignmentSpan.style.color = "#999";
-                                    assignmentSpan.style.fontStyle = "italic";
-                                }
-                            }
-
-                            locationBox.appendChild(assignmentSpan);
-                            if (currentDate.getMonth() === month && !timeOffRequest) {
-                                locationBox.addEventListener("click", () => assignName(key, assignmentSpan, locationBox));
-                            }
-                            locationContainer.appendChild(locationBox);
-                        });
-
-                        cell.appendChild(locationContainer);
-                        row.appendChild(cell);
-
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
-                    calendarTable.appendChild(row);
+                    currentDate.setDate(currentDate.getDate() + 1);
                 }
-            });
+                calendarTable.appendChild(row);
+            }
         }
 
         function assignName(key, assignmentSpan, locationBox) {
@@ -759,12 +1189,24 @@
             const requestList = document.getElementById("timeOffRequestList");
             requestList.innerHTML = "";
 
-            requests.forEach((request, index) => {
+            // Sort requests by date
+            const sortedRequests = [...requests].sort((a, b) => 
+                new Date(a.startDate) - new Date(b.startDate)
+            );
+
+            sortedRequests.forEach((request, index) => {
                 const li = document.createElement("div");
-                li.className = "duty-request-item";
+                li.className = "time-off-item"; // New class for styling
+                
+                // Format dates for display
+                const startDate = new Date(request.startDate).toLocaleDateString();
+                const endDate = new Date(request.endDate).toLocaleDateString();
                 
                 li.innerHTML = `
-                    <span>${request.name}: ${request.startDate} to ${request.endDate}</span>
+                    <div class="time-off-details">
+                        <strong>${request.name}</strong>
+                        <span>${startDate} to ${endDate}</span>
+                    </div>
                     <button class="delete-btn" onclick="deleteTimeOffRequest(${index})">×</button>
                 `;
                 
@@ -787,10 +1229,10 @@
             const summaryTable = document.getElementById("timeOffSummary");
             summaryTable.innerHTML = "";
 
-            // Get unique names from requests
+            // Get unique names from time off requests only
             const names = [...new Set(requests.map(request => request.name))];
             if (names.length === 0) {
-                summaryTable.innerHTML = "<tr><td>No time off requests found</td></tr>";
+                summaryTable.innerHTML = "<tr><td colspan='14'>No time off requests found</td></tr>";
                 return;
             }
 
@@ -814,7 +1256,7 @@
                 for (let month = 0; month < 12; month++) {
                     let monthDays = 0;
                     
-                    // Get all requests for this person in this month
+                    // Get all time off requests for this person in this month
                     const personRequests = requests.filter(request => {
                         const startDate = new Date(request.startDate);
                         const endDate = new Date(request.endDate);
@@ -847,6 +1289,16 @@
                 row.innerHTML += `<td class="year-total">${yearTotal}</td>`;
                 summaryTable.appendChild(row);
             });
+
+            // Add styles to make the summary more readable
+            const cells = summaryTable.getElementsByTagName('td');
+            for (let cell of cells) {
+                if (cell.textContent !== '-' && !cell.classList.contains('year-total')) {
+                    cell.style.backgroundColor = '#ffebee';
+                    cell.style.color = '#d32f2f';
+                    cell.style.fontWeight = 'bold';
+                }
+            }
         }
 
         function initializeTimeOff() {
@@ -872,12 +1324,12 @@
             if (activeTab) {
                 if (activeTab.id === 'dutyTab') {
                     updateDutyRequestList();
+                    generateCalendar();
                 } else if (activeTab.id === 'timeOffTab') {
                     updateTimeOffRequestList();
                 } else if (activeTab.id === 'summaryTab') {
                     updateTimeOffSummary();
                 }
-                generateCalendar();
             }
         }
 
@@ -886,6 +1338,7 @@
             const tabContents = document.getElementsByClassName("tab-content");
             for (let content of tabContents) {
                 content.classList.remove("active");
+                content.style.opacity = "0";
             }
 
             // Remove active class from all tab buttons
@@ -895,11 +1348,61 @@
             }
 
             // Show the selected tab content and mark button as active
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
+            const selectedTab = document.getElementById(tabName);
+            selectedTab.classList.add("active");
             
-            // Update the active tab's content
-            updateActiveTab();
+            // Update content before showing the tab
+            if (tabName === 'dutyTab') {
+                updateDutyRequestList();
+                generateCalendar();
+            } else if (tabName === 'timeOffTab') {
+                updateTimeOffRequestList();
+            } else if (tabName === 'summaryTab') {
+                updateTimeOffSummary();
+            }
+
+            // Show the tab with animation
+            setTimeout(() => {
+                selectedTab.style.opacity = "1";
+            }, 50);
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Add this function to manage email groups
+        function manageEmailGroups() {
+            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+            const groupsList = Object.keys(savedGroups).map(groupName => `
+                <div class="group-item">
+                    <span>${groupName} (${savedGroups[groupName].length} emails)</span>
+                    <button onclick="deleteEmailGroup('${groupName}')" class="delete-btn">×</button>
+                </div>
+            `).join('');
+
+            const emailModal = document.createElement('div');
+            emailModal.innerHTML = `
+                <div class="email-modal">
+                    <h3>Manage Email Groups</h3>
+                    <div class="groups-list">
+                        ${groupsList || '<p>No saved groups</p>'}
+                    </div>
+                    <div class="email-buttons">
+                        <button onclick="saveEmailGroup()" class="save-group-btn">Add New Group</button>
+                        <button onclick="closeEmailModal()">Close</button>
+                    </div>
+                </div>
+                <div class="modal-overlay"></div>
+            `;
+            document.body.appendChild(emailModal);
+        }
+
+        function deleteEmailGroup(groupName) {
+            if (confirm(`Are you sure you want to delete the group "${groupName}"?`)) {
+                const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+                delete savedGroups[groupName];
+                localStorage.setItem('emailGroups', JSON.stringify(savedGroups));
+                closeEmailModal();
+                emailRequestLink(); // Refresh the email modal
+            }
         }
     </script>
 </body>
