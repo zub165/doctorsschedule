@@ -547,17 +547,14 @@
 
             try {
                 const name = document.getElementById('name').value.trim();
-                const formType = document.getElementById('responseForm').dataset.type;
-                
-                // Get current requests and schedule
-                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
-                
-                if (!currentRequests[requestId]) {
-                    alert('This request has expired or is invalid.');
+                if (!name) {
+                    alert('Please enter your name');
                     return;
                 }
 
+                // Get the form type from the active tab
+                const formType = document.querySelector('.tab-button.active').textContent.toLowerCase().includes('duty') ? 'duty' : 'timeoff';
+                
                 let response = {
                     name: name,
                     date: new Date().toISOString(),
@@ -565,7 +562,7 @@
                     processed: false
                 };
 
-                // Handle duty request
+                // Get dates based on form type
                 if (formType === 'duty') {
                     response.startDate = document.getElementById('dutyStartDate').value;
                     response.endDate = document.getElementById('dutyEndDate').value;
@@ -575,25 +572,7 @@
                         alert('Please fill in all duty request fields');
                         return;
                     }
-
-                    // Check for date overlap
-                    if (checkDateOverlap(response.startDate, response.endDate, name)) {
-                        alert('You already have a duty or time off scheduled during this period');
-                        return;
-                    }
-
-                    // Add to schedule
-                    const start = new Date(response.startDate);
-                    const end = new Date(response.endDate);
-                    
-                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-                        const dateStr = date.toISOString().split('T')[0];
-                        const key = `${dateStr}_${response.location}`;
-                        schedule[key] = name;
-                    }
-                } 
-                // Handle time off request
-                else {
+                } else {
                     response.startDate = document.getElementById('timeOffStartDate').value;
                     response.endDate = document.getElementById('timeOffEndDate').value;
 
@@ -601,43 +580,39 @@
                         alert('Please fill in all time off request fields');
                         return;
                     }
-
-                    // Check for date overlap
-                    if (checkDateOverlap(response.startDate, response.endDate, name)) {
-                        alert('You already have a duty or time off scheduled during this period');
-                        return;
-                    }
-
-                    // Add to schedule
-                    const start = new Date(response.startDate);
-                    const end = new Date(response.endDate);
-                    
-                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-                        const dateStr = date.toISOString().split('T')[0];
-                        schedule[`${dateStr}_timeoff`] = name;
-                    }
                 }
 
-                // Save response
-                if (!currentRequests[requestId].responses) {
-                    currentRequests[requestId].responses = {};
+                // Validate date range
+                if (!validateDateRange(response.startDate, response.endDate)) {
+                    return;
                 }
-                currentRequests[requestId].responses[name] = response;
-                
-                // Save both schedule and requests
-                localStorage.setItem('schedule', JSON.stringify(schedule));
-                localStorage.setItem('emailRequests', JSON.stringify(currentRequests));
 
-                // Show success message
+                // Save to localStorage
+                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                if (!emailRequests[requestId]) {
+                    emailRequests[requestId] = {
+                        id: requestId,
+                        type: formType,
+                        responses: {}
+                    };
+                }
+
+                // Add response
+                emailRequests[requestId].responses[name] = response;
+                localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+
+                // Update schedule
+                updateCalendar(response);
+
+                // Show success and refresh display
                 document.getElementById('responseForm').style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
+                displayResponses();
 
-                // Redirect after 2 seconds
+                // Redirect after delay
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
-
-                displayResponses();
 
             } catch (error) {
                 console.error('Error submitting response:', error);
@@ -746,23 +721,26 @@
 
         function displayResponses() {
             try {
-                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                const request = currentRequests[requestId];
+                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                const request = emailRequests[requestId];
                 
                 const dutyResponsesList = document.getElementById('dutyResponsesList');
                 const timeOffResponsesList = document.getElementById('timeOffResponsesList');
                 const noDutyResponses = document.getElementById('noDutyResponses');
                 const noTimeOffResponses = document.getElementById('noTimeOffResponses');
                 
+                // Clear existing responses
                 dutyResponsesList.innerHTML = '';
                 timeOffResponsesList.innerHTML = '';
-                
+
                 if (!request || !request.responses) {
+                    console.log('No responses found for request:', requestId);
                     noDutyResponses.style.display = 'block';
                     noTimeOffResponses.style.display = 'block';
                     return;
                 }
 
+                console.log('Found responses:', request.responses);
                 let hasDutyResponses = false;
                 let hasTimeOffResponses = false;
 
@@ -798,11 +776,9 @@
                     }
                 });
 
-                // Show/hide no responses messages
+                // Update visibility
                 noDutyResponses.style.display = hasDutyResponses ? 'none' : 'block';
                 noTimeOffResponses.style.display = hasTimeOffResponses ? 'none' : 'block';
-                
-                // Show the responses section
                 document.getElementById('currentResponses').style.display = 'block';
 
             } catch (error) {
@@ -820,9 +796,16 @@
             });
         }
 
-        // Call displayResponses after initialization and after submitting a response
+        // Add this at the start of the script
+        function debugStorage() {
+            console.log('Current emailRequests:', JSON.parse(localStorage.getItem('emailRequests') || '{}'));
+            console.log('Current schedule:', JSON.parse(localStorage.getItem('schedule') || '{}'));
+        }
+
+        // Call it after initialization
         initializeRequest();
         displayResponses();
+        debugStorage();
     </script>
 </body>
 </html> 
