@@ -5,197 +5,458 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schedule Response</title>
     <style>
-        /* Copy relevant styles from index.html */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background-color: #f5f7fa;
-            color: #2c3e50;
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --success: #2ecc71;
+            --bg-color: #f5f7fa;
+            --text-color: #2c3e50;
+            --border-color: #e1e8ef;
+            --card-bg: white;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .response-form {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .response-container {
+            width: 100%;
             max-width: 600px;
-            margin: 0 auto;
-            padding: 30px;
-            background: white;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: var(--text-color);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+
+        .response-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: var(--bg-color);
+            padding: 8px;
             border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+        }
+
+        .tab-button:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            color: var(--text-color);
+            font-size: 15px;
             font-weight: 500;
         }
 
         input, select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e1e8ef;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
         }
 
-        button {
-            background: linear-gradient(45deg, #3498db, #2980b9);
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        .date-range-group {
+            background: var(--bg-color);
+            padding: 25px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .date-range-group h3 {
+            color: var(--text-color);
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: 500;
             cursor: pointer;
-            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
         }
 
-        button:hover {
+        button[type="submit"]:hover {
+            background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
         }
 
-        .error {
-            color: #e74c3c;
-            margin-top: 10px;
+        .success-message {
             text-align: center;
+            color: var(--success);
+            font-size: 18px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(46, 204, 113, 0.1);
+            border-radius: 12px;
+            border: 1px solid var(--success);
+            display: none;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        .success {
-            color: #2ecc71;
-            margin-top: 10px;
-            text-align: center;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .response-container {
+                padding: 25px;
+                margin: 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+
+            .date-range-group {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="response-form">
-        <h2>Schedule Response</h2>
-        <div id="responseContent">
+    <div class="response-container">
+        <h1>Schedule Response</h1>
+        
+        <!-- Add tabs -->
+        <div class="response-tabs">
+            <button type="button" class="tab-button active" onclick="switchTab('duty')">Duty Request</button>
+            <button type="button" class="tab-button" onclick="switchTab('timeoff')">Time Off Request</button>
+        </div>
+
+        <form id="responseForm" onsubmit="submitResponse(event)">
             <div class="form-group">
                 <label for="name">Your Name:</label>
                 <input type="text" id="name" required>
             </div>
-            <div class="form-group">
-                <label for="location">Preferred Location:</label>
-                <select id="location" required>
-                    <option value="">Select Location</option>
-                    <option value="MCH1">MCH1</option>
-                    <option value="MCH2">MCH2</option>
-                    <option value="MDH">MDH</option>
-                    <option value="BAH">BAH</option>
-                    <option value="MPH">MPH</option>
-                </select>
+
+            <div id="dutyFields" class="tab-content active">
+                <div class="form-group">
+                    <label for="location">Preferred Location:</label>
+                    <select id="location">
+                        <option value="MCH1">MCH1</option>
+                        <option value="MCH2">MCH2</option>
+                        <option value="MDH">MDH</option>
+                        <option value="BAH">BAH</option>
+                        <option value="MPH">MPH</option>
+                    </select>
+                </div>
+
+                <div class="date-range-group">
+                    <h3>Duty Date Range</h3>
+                    <div class="form-group">
+                        <label for="dutyStartDate">From:</label>
+                        <input type="date" id="dutyStartDate" class="date-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="dutyEndDate">To:</label>
+                        <input type="date" id="dutyEndDate" class="date-input">
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="date">Preferred Date:</label>
-                <input type="date" id="date" required>
+
+            <div id="timeOffFields" class="tab-content">
+                <div class="date-range-group">
+                    <h3>Time Off Date Range</h3>
+                    <div class="form-group">
+                        <label for="timeOffStartDate">From:</label>
+                        <input type="date" id="timeOffStartDate" class="date-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="timeOffEndDate">To:</label>
+                        <input type="date" id="timeOffEndDate" class="date-input">
+                    </div>
+                </div>
             </div>
-            <button onclick="submitResponse()">Submit Response</button>
+
+            <button type="submit">Submit Response</button>
+        </form>
+        <div id="successMessage" class="success-message">
+            Response submitted successfully!
         </div>
-        <p id="message"></p>
     </div>
 
     <script>
-        function getRequestId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
+        // Get request type from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestId = urlParams.get('id');
+        const requestType = urlParams.get('type');
+
+        if (!requestId || !requestType) {
+            alert('Invalid request link. Please use the link provided in the email.');
+            window.location.href = 'index.html';
         }
 
-        function submitResponse() {
-            const requestId = getRequestId();
-            if (!requestId) {
-                showMessage('Invalid request link', 'error');
-                return;
+        if (!['duty', 'timeoff'].includes(requestType)) {
+            alert('Invalid request type.');
+            window.location.href = 'index.html';
+        }
+
+        // Move this to the top of the script section, before any functions
+        const today = new Date().toISOString().split('T')[0];
+
+        function validateDateRange(startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const maxRange = new Date();
+            maxRange.setMonth(maxRange.getMonth() + 6);
+
+            if (end < start) {
+                alert('End date cannot be before start date');
+                return false;
             }
+
+            if (start < new Date(today)) {
+                alert('Start date cannot be in the past');
+                return false;
+            }
+
+            if (end > maxRange) {
+                alert('Cannot schedule more than 6 months in advance');
+                return false;
+            }
+
+            return true;
+        }
+
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(tabName)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (tabName === 'duty') {
+                document.getElementById('dutyFields').classList.add('active');
+                document.getElementById('location').required = true;
+                document.getElementById('dutyStartDate').required = true;
+                document.getElementById('dutyEndDate').required = true;
+                document.getElementById('timeOffStartDate').required = false;
+                document.getElementById('timeOffEndDate').required = false;
+            } else {
+                document.getElementById('timeOffFields').classList.add('active');
+                document.getElementById('location').required = false;
+                document.getElementById('dutyStartDate').required = false;
+                document.getElementById('dutyEndDate').required = false;
+                document.getElementById('timeOffStartDate').required = true;
+                document.getElementById('timeOffEndDate').required = true;
+            }
+        }
+
+        function submitResponse(event) {
+            event.preventDefault();
+
+            const submitButton = document.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
 
             const name = document.getElementById('name').value;
-            const location = document.getElementById('location').value;
-            const date = document.getElementById('date').value;
-
-            if (!name || !location || !date) {
-                showMessage('Please fill in all fields', 'error');
+            if (!name.trim()) {
+                alert('Please enter your name');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Response';
                 return;
             }
 
-            // Add validation for date
-            const selectedDate = new Date(date);
-            const now = new Date();
-            if (selectedDate < now) {
-                showMessage('Please select a future date', 'error');
-                return;
-            }
+            const activeTab = document.querySelector('.tab-content.active').id;
+            const isDuty = activeTab === 'dutyFields';
 
-            // Check if location is already assigned
-            const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
-            const key = `${date}_${location}`;
-            if (schedule[key]) {
-                showMessage('This location is already assigned for the selected date', 'error');
-                return;
-            }
-
-            // Get existing requests
-            const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-            const request = emailRequests[requestId];
-
-            if (!request) {
-                showMessage('Request not found or expired', 'error');
-                return;
-            }
-
-            // Add response
-            request.responses[name] = {
-                location,
-                date,
-                responseTime: new Date().toISOString()
+            let response = {
+                name: name,
+                date: new Date().toISOString(),
+                processed: false,
+                type: isDuty ? 'duty' : 'timeoff'
             };
 
-            // Update localStorage
-            localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+            try {
+                if (isDuty) {
+                    response.startDate = document.getElementById('dutyStartDate').value;
+                    response.endDate = document.getElementById('dutyEndDate').value;
+                    response.location = document.getElementById('location').value;
 
-            // Add to duty requests
-            const dutyRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
-            dutyRequests.push({
-                name,
-                location,
-                date,
-                fromEmail: true
-            });
-            localStorage.setItem('dutyRequests', JSON.stringify(dutyRequests));
+                    if (!response.startDate || !response.endDate || !response.location) {
+                        alert('Please fill in all duty request fields');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Response';
+                        return;
+                    }
+                } else {
+                    response.startDate = document.getElementById('timeOffStartDate').value;
+                    response.endDate = document.getElementById('timeOffEndDate').value;
 
-            // Show success message
-            showMessage('Response submitted successfully!', 'success');
-            document.getElementById('responseContent').style.display = 'none';
+                    if (!response.startDate || !response.endDate) {
+                        alert('Please fill in all time off request fields');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Response';
+                        return;
+                    }
+                }
+
+                // Validate date range
+                if (!validateDateRange(response.startDate, response.endDate)) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Response';
+                    return;
+                }
+
+                // Get existing requests
+                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                
+                if (!emailRequests[requestId]) {
+                    throw new Error('Request not found');
+                }
+
+                if (!emailRequests[requestId].responses) {
+                    emailRequests[requestId].responses = {};
+                }
+
+                emailRequests[requestId].responses[name] = response;
+                localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+                
+                // Show success message
+                document.getElementById('responseForm').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            } catch (error) {
+                console.error('Error accessing localStorage:', error);
+                alert('Error saving your response. Please try again later.');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Response';
+            }
         }
 
-        function showMessage(text, type) {
-            const message = document.getElementById('message');
-            message.textContent = text;
-            message.className = type;
+        // Update the initial request type handling
+        if (requestType === 'timeoff') {
+            if (emailRequests[requestId].type !== 'timeoff') {
+                alert('Invalid request type for this link.');
+                window.location.href = 'index.html';
+                return;
+            }
+            switchTab('timeoff');
+        } else {
+            if (emailRequests[requestId].type !== 'duty') {
+                alert('Invalid request type for this link.');
+                window.location.href = 'index.html';
+                return;
+            }
+            switchTab('duty');
         }
 
-        // Check if request exists on load
-        window.addEventListener('load', () => {
-            const requestId = getRequestId();
-            if (!requestId) {
-                showMessage('Invalid request link', 'error');
-                document.getElementById('responseContent').style.display = 'none';
-                return;
-            }
-
-            const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-            const request = emailRequests[requestId];
-
-            if (!request) {
-                showMessage('Request not found or expired', 'error');
-                document.getElementById('responseContent').style.display = 'none';
-                return;
-            }
-
-            // Set default date to today
-            document.getElementById('date').valueAsDate = new Date();
-        });
+        // Set minimum date to today
+        document.getElementById('dutyStartDate').min = today;
+        document.getElementById('dutyEndDate').min = today;
+        document.getElementById('timeOffStartDate').min = today;
+        document.getElementById('timeOffEndDate').min = today;
     </script>
 </body>
 </html> 
