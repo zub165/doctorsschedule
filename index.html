@@ -6,11 +6,54 @@
     <title>Monthly Schedule Maker</title>
     <!-- Copy all the styles from your original schedule_maker.html -->
     <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --text-color: #2c3e50;
+            --card-bg: white;
+            --border-color: #e1e8ef;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --card-bg: #2d2d2d;
+            --border-color: #404040;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --primary: #4aa3df;
+            --primary-dark: #3498db;
+            --success: #27ae60;
+            --danger: #c0392b;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            z-index: 1000;
+            border: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(45deg);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
-            background-color: #f5f7fa;
-            color: #2c3e50;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
 
         h1 {
@@ -439,6 +482,12 @@
             color: white;
         }
 
+        .email-buttons button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background: #ccc;
+        }
+
         .group-name-input {
             width: 100%;
             padding: 10px;
@@ -605,11 +654,12 @@
 
         /* Modern cards */
         .request-section, .requests {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
         }
 
         /* Time off items */
@@ -828,7 +878,169 @@
             cursor: pointer;
             font-size: 14px;
         }
+
+        /* Add these animations */
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .tab-content.active {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        .duty-request-item, .time-off-item {
+            transition: all 0.3s ease;
+        }
+
+        .duty-request-item:hover, .time-off-item:hover {
+            transform: translateX(10px) scale(1.02);
+        }
+
+        .assignment {
+            transition: all 0.3s ease;
+        }
+
+        .assignment:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--card-bg);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        button {
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .email-groups-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 10px;
+        }
+
+        .group-select-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .group-select-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .group-select-btn.selected {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .email-count {
+            font-size: 12px;
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        .selected-emails {
+            margin: 15px 0;
+        }
+
+        .selected-emails-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .selected-email-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: var(--primary);
+            color: white;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .remove-email {
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .remove-email:hover {
+            opacity: 1;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
     <!-- Add this right after <body> tag -->
@@ -843,6 +1055,8 @@
             </div>
         </div>
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+    <div id="loader" class="loader" style="display: none;"></div>
     <h1>Monthly Schedule Maker</h1>
     <div class="header">
         <select id="month">
@@ -960,6 +1174,15 @@
     </div>
 
     <script>
+        // Move this to the top of your script section
+        (function() {
+            try {
+                emailjs.init("q6L7jupvp0_qgIA80");
+            } catch (err) {
+                console.error('Error initializing EmailJS:', err);
+            }
+        })();
+
         // Initialize variables
         let schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
         let requests = JSON.parse(localStorage.getItem('requests') || '[]');
@@ -972,8 +1195,17 @@
             'user2': 'userpass2'
         };
 
+        let lastEmailSent = 0;
+        const EMAIL_RATE_LIMIT = 1000; // 1 second between emails
+
         function formatDate(date) {
             return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function checkDuplicateRequest(date, location) {
+            return dutyRequests.some(request => 
+                request.date === date && request.location === location
+            );
         }
 
         function addDutyRequest() {
@@ -995,15 +1227,24 @@
                 return;
             }
 
+            for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                const dateStr = formatDate(date);
+                if (checkDuplicateRequest(dateStr, location)) {
+                    alert(`There is already a request for ${location} on ${dateStr}`);
+                    return;
+                }
+            }
+
             // Get existing requests or initialize empty array
             const existingRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
 
             // Add new request for each day in the range
             for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                const dateStr = formatDate(date);
                 existingRequests.push({
                     name: name,
                     location: location,
-                    date: formatDate(date)
+                    date: dateStr
                 });
             }
 
@@ -1035,64 +1276,232 @@
         }
 
         function emailRequestLink() {
-            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
-            const groupButtons = Object.keys(savedGroups).map(groupName => 
-                `<button onclick="usePresetEmails('${groupName}')">${groupName}</button>`
-            ).join('');
+            try {
+                cleanupModals(); // Clean up any existing modals first
 
-            const emailModal = document.createElement('div');
-            emailModal.innerHTML = `
-                <div class="email-modal">
-                    <h3>Send Request Links</h3>
-                    <div class="email-input-container">
-                        <textarea id="emailList" placeholder="Enter email addresses (one per line or separated by commas)" rows="4"></textarea>
-                        <div class="preset-emails">
-                            ${groupButtons}
-                            <button onclick="saveEmailGroup()" class="save-group-btn">+ Save New Group</button>
-                            <button onclick="manageEmailGroups()" class="manage-groups-btn">Manage Groups</button>
+                const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+                const groupButtons = Object.keys(savedGroups).map(groupName => 
+                    `<button onclick="usePresetEmails('${groupName}')" class="group-select-btn">
+                        <span class="group-name">${groupName}</span>
+                        <span class="email-count">(${savedGroups[groupName].length})</span>
+                    </button>`
+                ).join('');
+
+                const emailModal = document.createElement('div');
+                emailModal.innerHTML = `
+                    <div class="email-modal">
+                        <h3>Send Request Links</h3>
+                        <div class="email-input-container">
+                            <div class="email-groups-section">
+                                <h4>Select Email Group</h4>
+                                <div class="preset-emails">
+                                    ${groupButtons}
+                                </div>
+                                <div class="group-actions">
+                                    <button onclick="saveEmailGroup()" class="save-group-btn">+ New Group</button>
+                                    <button onclick="manageEmailGroups()" class="manage-groups-btn">Manage Groups</button>
+                                </div>
+                            </div>
+                            <div class="selected-emails">
+                                <h4>Selected Recipients</h4>
+                                <div id="selectedEmailsList" class="selected-emails-list"></div>
+                            </div>
+                            <textarea id="emailList" placeholder="Or enter email addresses manually (one per line or separated by commas)" rows="4"></textarea>
+                        </div>
+                        <div class="email-buttons">
+                            <button onclick="sendEmails()" class="send-btn">Send to All</button>
+                            <button onclick="closeEmailModal()" class="cancel-btn">Cancel</button>
                         </div>
                     </div>
-                    <div class="email-buttons">
-                        <button onclick="sendEmails()">Send</button>
-                        <button onclick="closeEmailModal()">Cancel</button>
-                    </div>
-                </div>
-                <div class="modal-overlay"></div>
-            `;
-            document.body.appendChild(emailModal);
+                    <div class="modal-overlay"></div>
+                `;
+                document.body.appendChild(emailModal);
+            } catch (err) {
+                console.error('Error in emailRequestLink:', err);
+                alert('Error opening email form. Please try again.');
+            }
         }
 
-        function usePresetEmails(group) {
-            const emailList = document.getElementById('emailList');
-            const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
-            
-            if (savedGroups[group]) {
-                emailList.value = savedGroups[group].join('\n');
+        function usePresetEmails(groupName) {
+            try {
+                const emailList = document.getElementById('emailList');
+                const selectedEmailsList = document.getElementById('selectedEmailsList');
+                const savedGroups = JSON.parse(localStorage.getItem('emailGroups') || '{}');
+                
+                if (!savedGroups[groupName]) {
+                    alert('Email group not found');
+                    return;
+                }
+
+                // Toggle selection
+                const button = document.querySelector(`button[onclick="usePresetEmails('${groupName}')"]`);
+                const isSelected = button.classList.toggle('selected');
+                
+                // Get current emails
+                const currentEmails = new Set(emailList.value.split(/[\n,]+/).map(e => e.trim()).filter(e => e));
+                
+                // Add or remove group emails
+                savedGroups[groupName].forEach(email => {
+                    if (isSelected) {
+                        currentEmails.add(email);
+                    } else {
+                        currentEmails.delete(email);
+                    }
+                });
+
+                // Update textarea and display
+                const emailArray = Array.from(currentEmails);
+                emailList.value = emailArray.join('\n');
+                
+                selectedEmailsList.innerHTML = emailArray.map(email => `
+                    <div class="selected-email-tag">
+                        <span>${email}</span>
+                        <span class="remove-email" onclick="removeEmail('${email}')">&times;</span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Error using preset emails:', err);
+                alert('Error loading email group. Please try again.');
             }
+        }
+
+        function removeEmail(email) {
+            const emailList = document.getElementById('emailList');
+            const emails = emailList.value.split(/[\n,]+/).map(e => e.trim());
+            const filteredEmails = emails.filter(e => e !== email);
+            emailList.value = filteredEmails.join('\n');
+            
+            // Update selected emails display
+            const selectedEmailsList = document.getElementById('selectedEmailsList');
+            selectedEmailsList.innerHTML = filteredEmails.map(email => `
+                <div class="selected-email-tag">
+                    <span>${email}</span>
+                    <span class="remove-email" onclick="removeEmail('${email}')">&times;</span>
+                </div>
+            `).join('');
         }
 
         function sendEmails() {
             const emailList = document.getElementById('emailList').value;
-            const emails = emailList.split(/[\n,]+/).map(email => email.trim()).filter(email => email);
+            const emails = emailList.split(/[\n,]+/)
+                .map(email => email.trim())
+                .filter(email => email);
             
+            // Validate emails
+            const invalidEmails = emails.filter(email => !validateEmail(email));
+            if (invalidEmails.length > 0) {
+                alert(`Invalid email addresses:\n${invalidEmails.join('\n')}`);
+                return;
+            }
+
+            if (emails.length === 0) {
+                alert('Please enter at least one email address');
+                return;
+            }
+            
+            const requestId = generateUniqueId();
             const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-            const dutyLink = basePath + 'duty_request.html';
-            const scheduleLink = basePath + 'schedule_maker.html';
+            const responseLink = `${basePath}response.html?id=${requestId}`;
+
+            // Validate response link
+            if (!validateResponseLink(responseLink)) {
+                alert('Invalid response link generated. Please try again.');
+                return;
+            }
             
-            const emailSubject = "Schedule Links";
-            const emailBody = `Please use these links:\n\n` +
-                `Submit Duty Request: ${dutyLink}\n` +
-                `View Schedule: ${scheduleLink}`;
-            
-            const mailtoLink = `mailto:${emails.join(',')}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-            window.location.href = mailtoLink;
-            
-            closeEmailModal();
+            // Show loading state
+            const sendButton = document.querySelector('.send-btn');
+            sendButton.textContent = 'Sending...';
+            sendButton.disabled = true;
+
+            // Send emails in batches of 3 to avoid rate limits
+            const sendBatch = async (batch) => {
+                const promises = batch.map(async (email) => {
+                    try {
+                        // Add delay between emails
+                        const now = Date.now();
+                        const timeToWait = Math.max(0, lastEmailSent + EMAIL_RATE_LIMIT - now);
+                        if (timeToWait > 0) {
+                            await new Promise(resolve => setTimeout(resolve, timeToWait));
+                        }
+                        
+                        const templateParams = {
+                            to_name: "Doctor",
+                            to_email: email,
+                            from_name: "Schedule System",
+                            subject: "Schedule Request",
+                            message: "Please click the link below to respond to this schedule request.",
+                            response_link: responseLink,
+                            location: document.getElementById('dutyLocation')?.value || 'All Locations',
+                            reply_to: "zm_199@hotmail.com"
+                        };
+                        
+                        lastEmailSent = Date.now();
+                        return emailjs.send('service_r7zbsnk', 'template_caa7lhp', templateParams);
+                    } catch (err) {
+                        console.error(`Error sending email to ${email}:`, err);
+                        throw err; // Re-throw to be caught by the main error handler
+                    }
+                });
+                return Promise.all(promises);
+            };
+
+            // Process emails in batches
+            const batchSize = 3;
+            const batches = [];
+            for (let i = 0; i < emails.length; i += batchSize) {
+                batches.push(emails.slice(i, i + batchSize));
+            }
+
+            // Send batches sequentially
+            batches.reduce((promise, batch, index) => {
+                return promise.then(() => {
+                    sendButton.textContent = `Sending... (${index + 1}/${batches.length})`;
+                    return sendBatch(batch);
+                });
+            }, Promise.resolve())
+            .then((results) => {
+                const successfulEmails = results.filter(Boolean);
+                if (successfulEmails.length > 0) {
+                    // Save request details
+                    const emailRequest = {
+                        id: requestId,
+                        date: new Date().toISOString(),
+                        recipients: successfulEmails,
+                        status: 'sent',
+                        responses: {}
+                    };
+                    
+                    const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                    emailRequests[requestId] = emailRequest;
+                    localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+
+                    alert('All emails sent successfully!');
+                    closeEmailModal();
+                } else {
+                    alert('No valid emails found for sending.');
+                    closeEmailModal();
+                }
+            })
+            .catch((err) => {
+                console.error('Failed to send emails:', err);
+                alert('Error sending emails: ' + err.text);
+            })
+            .finally(() => {
+                sendButton.textContent = 'Send to All';
+                sendButton.disabled = false;
+            });
         }
 
         function closeEmailModal() {
-            const modal = document.querySelector('.email-modal').parentElement;
-            document.body.removeChild(modal);
+            try {
+                const modal = document.querySelector('.email-modal')?.parentElement;
+                if (modal) {
+                    document.body.removeChild(modal);
+                }
+            } catch (err) {
+                console.error('Error closing modal:', err);
+            }
         }
 
         function saveEmailGroup() {
@@ -1303,16 +1712,16 @@
                 }
             });
 
-            groupedRequests.forEach(group => {
+            // Display grouped requests
+            groupedRequests.forEach((group, index) => {
                 const li = document.createElement("div");
                 li.className = "duty-request-item";
                 
-                const dateRange = group.startDate === group.endDate ? 
-                    group.startDate : 
-                    `${group.startDate} to ${group.endDate}`;
-                    
+                const startDate = new Date(group.startDate).toLocaleDateString();
+                const endDate = new Date(group.endDate).toLocaleDateString();
+                
                 li.innerHTML = `
-                    <span>${group.name} - ${group.location}: ${dateRange}</span>
+                    <span>${group.name}: ${group.location} (${startDate} to ${endDate})</span>
                     <button class="delete-btn" onclick="deleteDutyRequest('${group.name}', '${group.location}', '${group.startDate}', '${group.endDate}')">×</button>
                 `;
                 
@@ -1321,25 +1730,22 @@
         }
 
         function isConsecutiveDate(date1, date2) {
-            if (!date1 || !date2) return false;
             const d1 = new Date(date1);
             const d2 = new Date(date2);
-            d1.setDate(d1.getDate() + 1);
-            return d1.toISOString().split('T')[0] === date2;
+            const diffTime = Math.abs(d2 - d1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays === 1;
         }
 
         function deleteDutyRequest(name, location, startDate, endDate) {
             if (confirm('Are you sure you want to delete this duty request?')) {
                 dutyRequests = dutyRequests.filter(request => {
                     const requestDate = new Date(request.date);
-                    const start = new Date(startDate);
-                    const end = new Date(endDate);
                     return !(request.name === name && 
                             request.location === location && 
-                            requestDate >= start && 
-                            requestDate <= end);
+                            requestDate >= new Date(startDate) && 
+                            requestDate <= new Date(endDate));
                 });
-                
                 localStorage.setItem('dutyRequests', JSON.stringify(dutyRequests));
                 updateDutyRequestList();
                 generateCalendar();
@@ -1510,6 +1916,7 @@
         // Initialize when page loads
         window.addEventListener('load', () => {
             checkAuth();
+            checkEmailResponses();
         });
 
         function updateActiveTab() {
@@ -1722,22 +2129,28 @@
         }
 
         function showMainContent(username) {
-            // Hide login overlay
-            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
             
-            // Add logged-in user info
-            const userInfo = document.createElement('div');
-            userInfo.className = 'logged-in-info';
-            userInfo.innerHTML = `
-                <span>Logged in as: ${username}</span>
-                <button onclick="logout()" class="logout-btn">Logout</button>
-            `;
-            document.body.appendChild(userInfo);
-            
-            // Initialize the app
-            initializeTimeOff();
-            generateCalendar();
-            updateDutyRequestList();
+            setTimeout(() => {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('loader').style.display = 'none';
+                
+                const userInfo = document.createElement('div');
+                userInfo.className = 'logged-in-info';
+                userInfo.innerHTML = `
+                    <span>Logged in as: ${username}</span>
+                    <button onclick="logout()" class="logout-btn">Logout</button>
+                `;
+                document.body.appendChild(userInfo);
+                
+                initializeTimeOff();
+                generateCalendar();
+                updateDutyRequestList();
+                
+                // Restore theme preference
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }, 1000);
         }
 
         function logout() {
@@ -1745,6 +2158,98 @@
             sessionStorage.removeItem('username');
             location.reload();
         }
+
+        function checkEmailResponses() {
+            try {
+                const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                const now = new Date();
+                let hasChanges = false;
+                
+                Object.entries(emailRequests).forEach(([requestId, request]) => {
+                    // Check for expired requests (7 days)
+                    const requestDate = new Date(request.date);
+                    if (now - requestDate > 7 * 24 * 60 * 60 * 1000) {
+                        delete emailRequests[requestId];
+                        hasChanges = true;
+                        return;
+                    }
+                    
+                    // Process new responses
+                    Object.entries(request.responses).forEach(([name, response]) => {
+                        if (!response.processed) {
+                            try {
+                                const key = `${response.date}_${response.location}`;
+                                if (!schedule[key]) {
+                                    schedule[key] = name;
+                                    hasChanges = true;
+                                }
+                                response.processed = true;
+                            } catch (err) {
+                                console.error('Error processing response:', err);
+                            }
+                        }
+                    });
+                });
+                
+                if (hasChanges) {
+                    localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+                    localStorage.setItem('schedule', JSON.stringify(schedule));
+                    generateCalendar();
+                }
+            } catch (err) {
+                console.error('Error checking email responses:', err);
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Add this function back
+        function generateUniqueId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Add this helper function
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(String(email).toLowerCase());
+        }
+
+        // Add this function
+        function validateResponseLink(link) {
+            try {
+                const url = new URL(link);
+                return url.pathname.endsWith('response.html');
+            } catch {
+                return false;
+            }
+        }
+
+        // Update the cleanup function
+        function cleanupModals() {
+            try {
+                const modals = document.querySelectorAll('.email-modal');
+                modals.forEach(modal => {
+                    try {
+                        const parentElement = modal.parentElement;
+                        if (parentElement && document.body.contains(parentElement)) {
+                            document.body.removeChild(parentElement);
+                        }
+                    } catch (err) {
+                        console.error('Error removing modal:', err);
+                    }
+                });
+            } catch (err) {
+                console.error('Error in cleanupModals:', err);
+            }
+        }
+
+        // Add cleanup on page unload and before opening new modals
+        window.addEventListener('beforeunload', cleanupModals);
     </script>
 </body>
 </html> 

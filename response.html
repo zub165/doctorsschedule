@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Response</title>
+    <style>
+        /* Copy relevant styles from index.html */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f7fa;
+            color: #2c3e50;
+        }
+
+        .response-form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ef;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .success {
+            color: #2ecc71;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="response-form">
+        <h2>Schedule Response</h2>
+        <div id="responseContent">
+            <div class="form-group">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" required>
+            </div>
+            <div class="form-group">
+                <label for="location">Preferred Location:</label>
+                <select id="location" required>
+                    <option value="">Select Location</option>
+                    <option value="MCH1">MCH1</option>
+                    <option value="MCH2">MCH2</option>
+                    <option value="MDH">MDH</option>
+                    <option value="BAH">BAH</option>
+                    <option value="MPH">MPH</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Preferred Date:</label>
+                <input type="date" id="date" required>
+            </div>
+            <button onclick="submitResponse()">Submit Response</button>
+        </div>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        function getRequestId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        function submitResponse() {
+            const requestId = getRequestId();
+            if (!requestId) {
+                showMessage('Invalid request link', 'error');
+                return;
+            }
+
+            const name = document.getElementById('name').value;
+            const location = document.getElementById('location').value;
+            const date = document.getElementById('date').value;
+
+            if (!name || !location || !date) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Add validation for date
+            const selectedDate = new Date(date);
+            const now = new Date();
+            if (selectedDate < now) {
+                showMessage('Please select a future date', 'error');
+                return;
+            }
+
+            // Check if location is already assigned
+            const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+            const key = `${date}_${location}`;
+            if (schedule[key]) {
+                showMessage('This location is already assigned for the selected date', 'error');
+                return;
+            }
+
+            // Get existing requests
+            const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+            const request = emailRequests[requestId];
+
+            if (!request) {
+                showMessage('Request not found or expired', 'error');
+                return;
+            }
+
+            // Add response
+            request.responses[name] = {
+                location,
+                date,
+                responseTime: new Date().toISOString()
+            };
+
+            // Update localStorage
+            localStorage.setItem('emailRequests', JSON.stringify(emailRequests));
+
+            // Add to duty requests
+            const dutyRequests = JSON.parse(localStorage.getItem('dutyRequests') || '[]');
+            dutyRequests.push({
+                name,
+                location,
+                date,
+                fromEmail: true
+            });
+            localStorage.setItem('dutyRequests', JSON.stringify(dutyRequests));
+
+            // Show success message
+            showMessage('Response submitted successfully!', 'success');
+            document.getElementById('responseContent').style.display = 'none';
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = type;
+        }
+
+        // Check if request exists on load
+        window.addEventListener('load', () => {
+            const requestId = getRequestId();
+            if (!requestId) {
+                showMessage('Invalid request link', 'error');
+                document.getElementById('responseContent').style.display = 'none';
+                return;
+            }
+
+            const emailRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+            const request = emailRequests[requestId];
+
+            if (!request) {
+                showMessage('Request not found or expired', 'error');
+                document.getElementById('responseContent').style.display = 'none';
+                return;
+            }
+
+            // Set default date to today
+            document.getElementById('date').valueAsDate = new Date();
+        });
+    </script>
+</body>
+</html> 
