@@ -212,6 +212,86 @@
                 padding: 20px;
             }
         }
+
+        /* Update response styles */
+        .responses-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid var(--border-color);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .responses-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .response-list {
+            background: var(--bg-color);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .response-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.3s ease-out;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .response-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .response-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .response-date {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .response-location {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .no-responses {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            font-style: italic;
+            display: none;
+        }
+
+        /* Add loading animation */
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +354,23 @@
         <div id="successMessage" class="success-message">
             Response submitted successfully!
         </div>
+
+        <!-- Update the responses section -->
+        <div id="currentResponses" class="responses-section">
+            <h3>Current Responses</h3>
+            <div class="responses-container">
+                <div id="dutyResponses" class="response-list">
+                    <h4>Duty Assignments</h4>
+                    <div id="dutyResponsesList"></div>
+                    <div class="no-responses" id="noDutyResponses">No duty responses yet</div>
+                </div>
+                <div id="timeOffResponses" class="response-list">
+                    <h4>Time Off Requests</h4>
+                    <div id="timeOffResponsesList"></div>
+                    <div class="no-responses" id="noTimeOffResponses">No time off responses yet</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -327,25 +424,36 @@
         }
 
         function checkDateOverlap(startDate, endDate, name) {
-            const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-            
-            for (const request of Object.values(currentRequests)) {
-                if (request.responses) {
-                    for (const [respName, resp] of Object.entries(request.responses)) {
-                        if (respName === name && request.id !== requestId) continue;
-                        
-                        const existingStart = new Date(resp.startDate);
-                        const existingEnd = new Date(resp.endDate);
-                        const newStart = new Date(startDate);
-                        const newEnd = new Date(endDate);
+            try {
+                const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+                const start = new Date(startDate);
+                const end = new Date(endDate);
 
-                        if (newStart <= existingEnd && newEnd >= existingStart) {
+                // Check each day in the range
+                for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                    const dateStr = date.toISOString().split('T')[0];
+                    
+                    // Check all locations for duty assignments
+                    const locations = ['MCH1', 'MCH2', 'MDH', 'BAH', 'MPH'];
+                    for (const loc of locations) {
+                        const key = `${dateStr}_${loc}`;
+                        if (schedule[key] && schedule[key] === name) {
                             return true;
                         }
                     }
+                    
+                    // Check time off
+                    const timeOffKey = `${dateStr}_timeoff`;
+                    if (schedule[timeOffKey] && schedule[timeOffKey] === name) {
+                        return true;
+                    }
                 }
+                
+                return false;
+            } catch (error) {
+                console.error('Error checking date overlap:', error);
+                return true; // Return true to prevent scheduling on error
             }
-            return false;
         }
 
         function switchTab(tabName) {
@@ -432,27 +540,32 @@
 
         function submitResponse(event) {
             event.preventDefault();
-
+            
             const submitButton = document.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = 'Submitting...';
 
             try {
-                const formType = document.getElementById('responseForm').dataset.type;
                 const name = document.getElementById('name').value.trim();
+                const formType = document.getElementById('responseForm').dataset.type;
                 
-                if (!name) {
-                    alert('Please enter your name');
+                // Get current requests and schedule
+                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                const schedule = JSON.parse(localStorage.getItem('schedule') || '{}');
+                
+                if (!currentRequests[requestId]) {
+                    alert('This request has expired or is invalid.');
                     return;
                 }
 
                 let response = {
                     name: name,
                     date: new Date().toISOString(),
-                    processed: false,
-                    type: formType
+                    type: formType,
+                    processed: false
                 };
 
+                // Handle duty request
                 if (formType === 'duty') {
                     response.startDate = document.getElementById('dutyStartDate').value;
                     response.endDate = document.getElementById('dutyEndDate').value;
@@ -462,7 +575,25 @@
                         alert('Please fill in all duty request fields');
                         return;
                     }
-                } else {
+
+                    // Check for date overlap
+                    if (checkDateOverlap(response.startDate, response.endDate, name)) {
+                        alert('You already have a duty or time off scheduled during this period');
+                        return;
+                    }
+
+                    // Add to schedule
+                    const start = new Date(response.startDate);
+                    const end = new Date(response.endDate);
+                    
+                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                        const dateStr = date.toISOString().split('T')[0];
+                        const key = `${dateStr}_${response.location}`;
+                        schedule[key] = name;
+                    }
+                } 
+                // Handle time off request
+                else {
                     response.startDate = document.getElementById('timeOffStartDate').value;
                     response.endDate = document.getElementById('timeOffEndDate').value;
 
@@ -470,39 +601,43 @@
                         alert('Please fill in all time off request fields');
                         return;
                     }
-                }
 
-                if (!validateDateRange(response.startDate, response.endDate)) {
-                    return;
-                }
+                    // Check for date overlap
+                    if (checkDateOverlap(response.startDate, response.endDate, name)) {
+                        alert('You already have a duty or time off scheduled during this period');
+                        return;
+                    }
 
-                // Get current requests
-                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
-                
-                if (!currentRequests[requestId]) {
-                    alert('This request has expired or is invalid.');
-                    return;
+                    // Add to schedule
+                    const start = new Date(response.startDate);
+                    const end = new Date(response.endDate);
+                    
+                    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+                        const dateStr = date.toISOString().split('T')[0];
+                        schedule[`${dateStr}_timeoff`] = name;
+                    }
                 }
 
                 // Save response
                 if (!currentRequests[requestId].responses) {
                     currentRequests[requestId].responses = {};
                 }
-
                 currentRequests[requestId].responses[name] = response;
+                
+                // Save both schedule and requests
+                localStorage.setItem('schedule', JSON.stringify(schedule));
                 localStorage.setItem('emailRequests', JSON.stringify(currentRequests));
 
                 // Show success message
                 document.getElementById('responseForm').style.display = 'none';
                 document.getElementById('successMessage').style.display = 'block';
-                
-                // Update calendar in main page
-                updateCalendar(response);
 
                 // Redirect after 2 seconds
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
+
+                displayResponses();
 
             } catch (error) {
                 console.error('Error submitting response:', error);
@@ -566,13 +701,21 @@
         // Initialize based on request type and validate
         function initializeRequest() {
             try {
-                // Set initial tab based on request type
                 const initialType = requestType || 'duty';
                 document.getElementById('responseForm').dataset.type = initialType;
 
-                // Hide both tab buttons initially
-                document.getElementById('dutyTabBtn').style.display = 'none';
-                document.getElementById('timeOffTabBtn').style.display = 'none';
+                // Check for existing response
+                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                const request = currentRequests[requestId];
+                
+                if (request && request.responses) {
+                    const name = document.getElementById('name').value.trim();
+                    if (request.responses[name]) {
+                        alert('You have already responded to this request.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
 
                 // Show only the relevant tab button
                 if (initialType === 'timeoff') {
@@ -590,8 +733,8 @@
                 }
 
                 // Set minimum dates
-                const dateInputs = document.querySelectorAll('input[type="date"]');
-                dateInputs.forEach(input => {
+                const today = new Date().toISOString().split('T')[0];
+                document.querySelectorAll('input[type="date"]').forEach(input => {
                     input.min = today;
                 });
 
@@ -601,8 +744,85 @@
             }
         }
 
-        // Call initialization
+        function displayResponses() {
+            try {
+                const currentRequests = JSON.parse(localStorage.getItem('emailRequests') || '{}');
+                const request = currentRequests[requestId];
+                
+                const dutyResponsesList = document.getElementById('dutyResponsesList');
+                const timeOffResponsesList = document.getElementById('timeOffResponsesList');
+                const noDutyResponses = document.getElementById('noDutyResponses');
+                const noTimeOffResponses = document.getElementById('noTimeOffResponses');
+                
+                dutyResponsesList.innerHTML = '';
+                timeOffResponsesList.innerHTML = '';
+                
+                if (!request || !request.responses) {
+                    noDutyResponses.style.display = 'block';
+                    noTimeOffResponses.style.display = 'block';
+                    return;
+                }
+
+                let hasDutyResponses = false;
+                let hasTimeOffResponses = false;
+
+                Object.entries(request.responses).forEach(([name, response]) => {
+                    const responseElement = document.createElement('div');
+                    responseElement.className = 'response-item';
+                    
+                    const dateRange = `${formatDate(response.startDate)} to ${formatDate(response.endDate)}`;
+                    const submittedDate = formatDate(response.date);
+                    
+                    if (response.type === 'duty') {
+                        hasDutyResponses = true;
+                        responseElement.innerHTML = `
+                            <div class="response-name">${name}</div>
+                            <div class="response-date">
+                                <div>Period: ${dateRange}</div>
+                                <div>Submitted: ${submittedDate}</div>
+                            </div>
+                            <div class="response-location">${response.location}</div>
+                        `;
+                        dutyResponsesList.appendChild(responseElement);
+                    } else {
+                        hasTimeOffResponses = true;
+                        responseElement.innerHTML = `
+                            <div class="response-name">${name}</div>
+                            <div class="response-date">
+                                <div>Period: ${dateRange}</div>
+                                <div>Submitted: ${submittedDate}</div>
+                            </div>
+                            <div class="response-location">Time Off</div>
+                        `;
+                        timeOffResponsesList.appendChild(responseElement);
+                    }
+                });
+
+                // Show/hide no responses messages
+                noDutyResponses.style.display = hasDutyResponses ? 'none' : 'block';
+                noTimeOffResponses.style.display = hasTimeOffResponses ? 'none' : 'block';
+                
+                // Show the responses section
+                document.getElementById('currentResponses').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error displaying responses:', error);
+                alert('Error loading responses. Please refresh the page.');
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Call displayResponses after initialization and after submitting a response
         initializeRequest();
+        displayResponses();
     </script>
 </body>
 </html> 
