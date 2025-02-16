@@ -675,6 +675,77 @@
             color: #1a237e;
             border-bottom: 2px solid #e1e8ef;
         }
+
+        .export-section {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .export-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .date-range {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .export-options {
+            display: flex;
+            gap: 20px;
+        }
+
+        .export-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .export-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .export-table th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .export-table th, .export-table td {
+            padding: 12px;
+            border: 1px solid #e1e8ef;
+        }
     </style>
 </head>
 <body>
@@ -702,6 +773,7 @@
         <button class="tab-button active" onclick="openTab(event, 'dutyTab')">Ask for Duty</button>
         <button class="tab-button" onclick="openTab(event, 'timeOffTab')">Request Time Off</button>
         <button class="tab-button" onclick="openTab(event, 'summaryTab')">Time Off Summary</button>
+        <button class="tab-button" onclick="openTab(event, 'exportTab')">Export Data</button>
     </div>
 
     <!-- Duty Tab -->
@@ -766,6 +838,28 @@
             <div class="summary-table-container">
                 <table id="timeOffSummary" class="summary-table">
                     <!-- Summary will be generated here -->
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Tab -->
+    <div id="exportTab" class="tab-content">
+        <div class="export-section">
+            <h2>Export Schedule Data</h2>
+            <div class="export-controls">
+                <div class="date-range">
+                    <input type="month" id="exportMonth" required>
+                </div>
+                <div class="export-options">
+                    <label><input type="checkbox" id="includeDuty" checked> Include Duty Assignments</label>
+                    <label><input type="checkbox" id="includeTimeOff" checked> Include Time Off</label>
+                </div>
+                <button onclick="exportToExcel()" class="export-btn">Export to Excel</button>
+            </div>
+            <div class="export-preview">
+                <table id="exportTable" class="export-table">
+                    <!-- Preview will be generated here -->
                 </table>
             </div>
         </div>
@@ -1359,6 +1453,13 @@
                 updateTimeOffRequestList();
             } else if (tabName === 'summaryTab') {
                 updateTimeOffSummary();
+            } else if (tabName === 'exportTab') {
+                // Set default month to current month
+                const now = new Date();
+                const month = now.getMonth() + 1;
+                const year = now.getFullYear();
+                document.getElementById('exportMonth').value = 
+                    `${year}-${month.toString().padStart(2, '0')}`;
             }
 
             // Show the tab with animation
@@ -1403,6 +1504,93 @@
                 closeEmailModal();
                 emailRequestLink(); // Refresh the email modal
             }
+        }
+
+        function exportToExcel() {
+            const month = document.getElementById('exportMonth').value;
+            const includeDuty = document.getElementById('includeDuty').checked;
+            const includeTimeOff = document.getElementById('includeTimeOff').checked;
+            
+            if (!month) {
+                alert('Please select a month');
+                return;
+            }
+
+            const [year, monthNum] = month.split('-');
+            const data = [];
+            
+            // Add header row
+            data.push(['Date', 'Name', 'Type', 'Location', 'Status']);
+            
+            // Get all dates for the selected month
+            const startDate = new Date(year, monthNum - 1, 1);
+            const endDate = new Date(year, monthNum, 0);
+            
+            for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+                const dateStr = formatDate(date);
+                
+                // Add duty assignments
+                if (includeDuty) {
+                    const locations = ["MCH1", "MCH2", "MDH", "BAH", "MPH"];
+                    locations.forEach(location => {
+                        const key = `${dateStr}_${location}`;
+                        if (schedule[key]) {
+                            data.push([
+                                dateStr,
+                                schedule[key],
+                                'Duty',
+                                location,
+                                'Assigned'
+                            ]);
+                        }
+                        
+                        // Add duty requests
+                        const dutyRequest = dutyRequests.find(req => 
+                            req.date === dateStr && req.location === location
+                        );
+                        if (dutyRequest) {
+                            data.push([
+                                dateStr,
+                                dutyRequest.name,
+                                'Duty',
+                                location,
+                                'Requested'
+                            ]);
+                        }
+                    });
+                }
+                
+                // Add time off requests
+                if (includeTimeOff) {
+                    requests.forEach(request => {
+                        const start = new Date(request.startDate);
+                        const end = new Date(request.endDate);
+                        if (date >= start && date <= end) {
+                            data.push([
+                                dateStr,
+                                request.name,
+                                'Time Off',
+                                'All',
+                                'Approved'
+                            ]);
+                        }
+                    });
+                }
+            }
+            
+            // Create CSV content
+            let csv = data.map(row => row.join(',')).join('\n');
+            
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `schedule_${month}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
